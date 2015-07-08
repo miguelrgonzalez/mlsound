@@ -1,0 +1,8 @@
+{
+    "role-name" : "role-name",
+    "description" : "role description",
+    "role" : [
+        "rest-reader",
+        "rest-writer"
+     ]
+}
