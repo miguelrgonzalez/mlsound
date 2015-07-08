@@ -24,7 +24,7 @@ var actions = {
         var settings = common.objectSettings('servers/http', program.env);
         dbManager.databaseOperation('clear-database', settings["modules-database"],
                 function() {
-                    logger.info('Code successfully cleaned');
+                    logger.info('%s successfully cleaned', settings["modules-database"]);
                 });
     },
 
@@ -32,7 +32,7 @@ var actions = {
         var settings = common.objectSettings('servers/http', program.env);
         dbManager.databaseOperation('clear-database', settings["content-database"],
                 function() {
-                    logger.info('Data successfully cleaned');
+                    logger.info('%s successfully cleaned', settings["content-database"]);
                 });
     },
 
@@ -40,7 +40,7 @@ var actions = {
         var settings = common.objectSettings('databases/content', program.env);
         dbManager.databaseOperation('clear-database', settings["schema-database"],
                 function() {
-                    logger.info('Schemas successfully cleaned');
+                    logger.info('%s successfully cleaned', settings["schema-database"]);
                 });
     }
 };
