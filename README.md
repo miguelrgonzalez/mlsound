@@ -7,6 +7,7 @@ This projects aims to provide a fully functional javascript solution for deployi
 
 For now there is no npm package yet. To install it just execute the following command from project's root:
 ```
+    $> npm install
     $> npm link
 ```
 
