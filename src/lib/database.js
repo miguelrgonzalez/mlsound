@@ -58,7 +58,7 @@ DBManager.prototype.restartGroup = function(callback) {
         body: { "operation" : "restart-group"}
     }).
     result(function(response) {
-        if (response.statusCode === 202) {
+        if (response.statusCode === 200) {
             if(callback) callback();
         }
         else {
