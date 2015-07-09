@@ -29,6 +29,10 @@ DBManager.initializeGroups = function(callback) {
     this.initializeMultiObjects('groups', 'groups', 'group-name', undefined, callback);
 };
 
+DBManager.initializeHosts = function(callback) {
+    this.initializeMultiObjects('hosts', 'hosts', 'host-name', undefined, callback);
+};
+
 DBManager.updateServer = function(type, callback) {
     var UPDATE_SERVER_URL = '/manage/v2/servers/' + this.httpSettings["server-name"];
     var manager = this.getHttpManager();

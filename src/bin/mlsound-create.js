@@ -142,6 +142,9 @@ ncp(path.join(path.resolve(__dirname), '../templates/'),
                 changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'),
                                     'host', result.host);
 
+                changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'),
+                                    'host-name', result.host);
+
 
                 //Adding file headers
                 addFileHeader(path.join(name, 'settings/base-configuration/databases/content.json'),
