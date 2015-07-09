@@ -29,10 +29,11 @@ prompt.get({
     }
 }, function(err, result) {
     if(result.answer === 'Y'){
+        var dbManager = database.createDBManager(program.env)
         dbManager.removeServer('http', function() {
-            //wait a seconf before trying to do anything else
+            //wait 3 seconds before trying to do anything else
             //removing an application server seems to have an impact on server
-            //response times. Without waiting it'll throw either 500 or 503 errors
+            //response times. Without waiting, it'll throw either 500 or 503 errors
             logger.warning('Waiting for server restart');
             setTimeout(function() {
                 dbManager.removeDatabase('content', undefined, function() {
@@ -51,4 +52,3 @@ prompt.get({
     }
 });
 
-var dbManager = database.createDBManager(program.env)
