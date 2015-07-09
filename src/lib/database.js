@@ -3,6 +3,8 @@ var conflate = require('conflate');
 var fs = require('fs');
 var keys = Object.keys || require('object-keys');
 var marklogic = require('marklogic');
+var util = require('../lib/utils.js');
+var logger = util.consoleLogger;
 
 var DBManager = function(env) {
     if(!(this instanceof DBManager)) {
@@ -137,6 +139,64 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                    //nothing to send. We are done with this
                    callBackwhenDone();
                }
+            } else {
+                logger.error('Error when checking %s [Error %s]', item, response.statusCode);
+                console.error(response.data);
+                process.exit(1);
+            };
+        });
+    });
+};
+
+DBManager.prototype.removeMultiObjects = function(type, url, typeName, params, callback) {
+
+    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true)
+    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false)
+
+    //merge lists and remove duplicates
+    var defs = baseDefs.concat(envDefs);
+    defs = defs.filter(function(elem, pos) {
+        return defs.indexOf(elem) == pos;
+    });
+
+    var that = this;
+
+    var callBackwhenDone = (function() {
+        var total = defs.length;
+        return function() {
+            total = total-1;
+            if (total < 1) callback();
+        };
+    })();
+
+    //Initilialize all
+    defs.forEach(function(item){
+        var settings = common.objectSettings(type + '/' + item, that.env);
+        var SERVER_URL = '/manage/v2/' + url +  '/' + settings[typeName];
+        var manager = that.getHttpManager();
+        //Check if exists
+        manager.get({
+            endpoint: SERVER_URL
+        }).
+        result(function(response) {
+            if (response.statusCode === 200) {
+               //present.
+               manager.remove({
+                   endpoint : SERVER_URL,
+                   params : params
+               })
+               .result(function(response) {
+                    if (response.statusCode === 204) {
+                        callBackwhenDone();
+                    } else {
+                        logger.error('Error when deleting %s [Error %s]', item, response.statusCode);
+                        console.error(response.data);
+                        process.exit(1);
+                    };
+               });
+            } else if (response.statusCode === 404) {
+                //already removed
+                callBackwhenDone();
             } else {
                 logger.error('Error when checking %s [Error %s]', item, response.statusCode);
                 console.error(response.data);

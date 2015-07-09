@@ -1,5 +1,5 @@
 var util = require('../../lib/utils.js');
-var logger = util.consoleLogger;
+var logger = util.loggerLogger;
 
 var DBManager = module.exports;
 
@@ -30,7 +30,7 @@ DBManager.initializeRestAPI = function(callback) {
                             if (callback) callback();
                         } else {
                             logger.error('Error when creating Rest API instance [Error %s]', response.statusCode);
-                            console.error(response.data);
+                            logger.error(response.data);
                             process.exit(1);
                         }
                     });
@@ -39,7 +39,7 @@ DBManager.initializeRestAPI = function(callback) {
             if (callback) callback();
         } else {
             logger.error('Something is not right [%s] - %s', response.statusCode, response.data);
-            console.error(response.data);
+            logger.error(response.data);
             process.exit(1);
         }
 

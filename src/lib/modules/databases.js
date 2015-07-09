@@ -23,7 +23,7 @@ DBManager.databaseOperation = function(operation, database, callback) {
         else {
             logger.error('Error when issuing database operation %s at %s [Error %s]',
                 operation, database, response.statusCode);
-            console.error(response.data);
+            logger.error(response.data);
             process.exit(1);
         }
     });
@@ -52,7 +52,7 @@ DBManager.initializeDatabase = function(type, callback) {
                             logger.info(type + ' database created');
                         } else {
                             logger.error('Error when creating %s database [Error %s]', type, response.statusCode);
-                            console.error(response.data);
+                            logger.error(response.data);
                             process.exit(1);
                         }
 
@@ -67,7 +67,7 @@ DBManager.initializeDatabase = function(type, callback) {
                 }).result(function(response) {
                         if (response.statusCode !== 204) {
                             logger.error('Error when updating %s database [Error %s]', type, response.statusCode);
-                            console.error(response.data);
+                            logger.error(response.data);
                             process.exit(1);
                         }
 
@@ -76,7 +76,49 @@ DBManager.initializeDatabase = function(type, callback) {
                 });
         } else {
             logger.error('Error when checking %s database [Error %s]', type, response.statusCode);
-            console.error(response.data);
+            logger.error(response.data);
+            process.exit(1);
+        }
+
+    });
+};
+
+DBManager.removeDatabase = function(type, removeForest, callback) {
+    //check removeForest value
+    if (removeForest && !/(configuration|data)/i.test(removeForest)) {
+        logger.error('Only configuration and data allowed for removeForest parameter');
+        process.exit(1);
+    };
+    var settings = common.objectSettings('databases/' + type, this.env);
+    var SERVER_URL = '/manage/v2/databases/' + settings["database-name"];
+    var manager = this.getHttpManager();
+    //Check if server exists
+    manager.get({
+        endpoint: SERVER_URL
+    }).
+    result(function(response) {
+        if (response.statusCode === 200) {
+            manager.remove(
+                {
+                    endpoint : SERVER_URL,
+                    params : (removeForest ? { 'forest-delete' : removeForest } : undefined)
+                }).result(function(response) {
+                        if (response.statusCode !== 204) {
+                            logger.error('Error when deleting %s database [Error %s]', type, response.statusCode);
+                            logger.error(response.data);
+                            process.exit(1);
+                        }
+
+                        if (callback)
+                            callback();
+                });
+        } else if (response.statusCode === 404) {
+            //database already removed
+            if (callback)
+                callback();
+        } else {
+            logger.error('Error when deleting %s database [Error %s]', type, response.statusCode);
+            logger.error(response.data);
             process.exit(1);
         }
 
@@ -116,7 +158,7 @@ DBManager.loadDocuments = function(folder, database, callback) {
                 },
                 function(error) {
                     logger.error('Error loading file ' + file);
-                    console.error(error);
+                    logger.error(error);
                     process.exit(1);
                 }
             );
