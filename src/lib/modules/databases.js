@@ -31,11 +31,64 @@ DBManager.databaseOperation = function(operation, database, callback) {
     });
 };
 
+DBManager.buildForestsByHost = function(dbSettings) {
+    var count = dbSettings.forest['forests-per-host'];
+    // idenfity the hosts
+    var hosts = this.getConfiguration('hosts');
+    // build forest names
+    var forests = [], forestNames = [];
+    hosts.forEach(function(host, index) {
+        var hostSettings = common.objectSettings('hosts/' + host, this.env);
+        console.log('host is: ' + hostSettings['host-name']);
+        for (var i = 0; i < count; i++) {
+            forests.push({'host': hostSettings['host-name'], 'forest-name': dbSettings['database-name'] + '-' + (index * count + i)});
+        }
+    });
+
+    var manager = this.getHttpManager();
+    forests.forEach(function(forest) {
+        console.log('forest: ' + forest['forest-name']);
+        forestNames.push(forest['forest-name']);
+        manager.get({
+            endpoint: '/manage/v2/forests/' + forest['forest-name']
+        }).result(function(response) {
+            if (response.statusCode === 404) {
+                console.log('creating forest ' + forest['forest-name']);
+                manager.post({
+                    endpoint : '/manage/v2/forests',
+                    body : forest
+                }).result(function(response) {
+                    if (response.statusCode === 201) {
+                        // yay. do nothing. 
+                    } else {
+                        logger.error('Error when creating %s [Error %s]', forest, response.statusCode);
+                        console.error(response.data);
+                        process.exit(1);
+                    }
+               });
+            } else if (response.statusCode === 200) {
+            } else {
+                logger.error('Error when checking %s [Error %s]', forest, response.statusCode);
+                console.error(response.data);
+                process.exit(1);
+            }
+        });
+    });
+    return forestNames;
+};
+
 DBManager.initializeDatabase = function(type, callback) {
     var settings = common.objectSettings('databases/' + type, this.env);
     var BASE_SERVER_URL = '/manage/v2/databases';
     var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings['database-name'];
     var manager = this.getHttpManager();
+
+    if (!Array.isArray(settings.forest)) {
+        console.log('forest setting: ' + JSON.stringify(settings.forest));
+        // settings.forest may be an object that contains a forests-per-host value.
+        settings.forest = this.buildForestsByHost(settings);
+    }
+
     //Check if server exists
     manager.get({
         endpoint: UPDATE_SERVER_URL

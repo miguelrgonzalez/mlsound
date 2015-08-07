@@ -13,6 +13,7 @@ var DBManager = function(env) {
     this.env = env;
     this.settings = common.objectSettings('connection', env);
     this.httpSettings = common.objectSettings('servers/http', env);
+    this.configuration = {};
 };
 
 DBManager.prototype.getDatabaseClient = function () {
@@ -68,16 +69,27 @@ DBManager.prototype.getConfigurationFiles = function(folder, failOnError) {
         }
 };
 
+DBManager.prototype.getConfiguration = function(type) {
+    console.log('requesting ' + type);
+    if (!this.configuration[type]) {
+        var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true)
+        var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false)
+
+        //merge lists and remove duplicates
+        var defs = baseDefs.concat(envDefs);
+        defs = defs.filter(function(elem, pos) {
+            return defs.indexOf(elem) == pos;
+        });
+
+        this.configuration[type] = defs;
+    }
+
+    return this.configuration[type];
+};
+
 DBManager.prototype.initializeMultiObjects = function(type, url, typeName, supported, callback) {
 
-    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true);
-    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false);
-
-    //merge lists and remove duplicates
-    var defs = baseDefs.concat(envDefs);
-    defs = defs.filter(function(elem, pos) {
-        return defs.indexOf(elem) === pos;
-    });
+    var defs = this.getConfiguration(type);
 
     var that = this;
 
@@ -153,14 +165,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
 
 DBManager.prototype.removeMultiObjects = function(type, url, typeName, params, callback) {
 
-    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true);
-    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false);
-
-    //merge lists and remove duplicates
-    var defs = baseDefs.concat(envDefs);
-    defs = defs.filter(function(elem, pos) {
-        return defs.indexOf(elem) === pos;
-    });
+    var defs = this.getConfiguration(type);
 
     var that = this;
 
