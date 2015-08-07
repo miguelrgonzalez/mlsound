@@ -17,12 +17,12 @@ if (!/(code|data|schemas)/i.test(name)) {
     process.exit(1);
 }
 
-var dbManager = database.createDBManager(program.env)
+var dbManager = database.createDBManager(program.env);
 
 var actions = {
     'code' : function() {
         var settings = common.objectSettings('servers/http', program.env);
-        dbManager.loadDocuments('src', settings["modules-database"],
+        dbManager.loadDocuments('src', settings['modules-database'],
                 function() {
                     logger.info('Code successfully loaded');
                 });
@@ -30,7 +30,7 @@ var actions = {
 
     'data' : function() {
         var settings = common.objectSettings('servers/http', program.env);
-        dbManager.loadDocuments('data', settings["content-database"],
+        dbManager.loadDocuments('data', settings['content-database'],
                 function() {
                     logger.info('Data successfully loaded');
                 });
@@ -38,7 +38,7 @@ var actions = {
 
     'schemas' : function() {
         var settings = common.objectSettings('databases/content', program.env);
-        dbManager.loadDocuments('schemas', settings["schema-database"],
+        dbManager.loadDocuments('schemas', settings['schema-database'],
                 function() {
                     logger.info('Schemas successfully loaded');
                 });

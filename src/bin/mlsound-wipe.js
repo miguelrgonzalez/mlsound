@@ -29,7 +29,7 @@ prompt.get({
     }
 }, function(err, result) {
     if(result.answer === 'Y'){
-        var dbManager = database.createDBManager(program.env)
+        var dbManager = database.createDBManager(program.env);
         dbManager.removeServer('http', function() {
             //wait 3 seconds before trying to do anything else
             //removing an application server seems to have an impact on server

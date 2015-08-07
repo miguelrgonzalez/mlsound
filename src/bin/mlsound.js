@@ -3,7 +3,7 @@ var colors = require('colors');
 var packjson = require('../../package.json');
 var program = require('commander');
 
-console.log(("mlsound version " + packjson.version).green);
+console.log(('mlsound version ' + packjson.version).green);
 
 program
     .version(packjson.version)

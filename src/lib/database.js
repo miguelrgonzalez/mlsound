@@ -40,14 +40,14 @@ DBManager.prototype.filterUnsupportedProperties = function(supported, object) {
 
     var newObj = {};
 
-    for(key in allowed){
+    for(var key in allowed){
         newObj[key] = object[key];
     }
 
     return newObj;
 };
 
-DBManager.prototype.getConfigurationFiles = function(folder, fail_on_error) {
+DBManager.prototype.getConfigurationFiles = function(folder, failOnError) {
         var removeExt = function(ext) {
             var re = new RegExp(ext + '$', 'g');
             return function(string) {
@@ -58,7 +58,7 @@ DBManager.prototype.getConfigurationFiles = function(folder, fail_on_error) {
             //return configuration files without the extension
             return fs.readdirSync(folder).map(removeExt('.json'));
         } catch(e) {
-            if (fail_on_error) {
+            if (failOnError) {
                 console.error(folder + ' Not found!!!! ');
                 process.exit(1);
             } else {
@@ -70,13 +70,13 @@ DBManager.prototype.getConfigurationFiles = function(folder, fail_on_error) {
 
 DBManager.prototype.initializeMultiObjects = function(type, url, typeName, supported, callback) {
 
-    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true)
-    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false)
+    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true);
+    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false);
 
     //merge lists and remove duplicates
     var defs = baseDefs.concat(envDefs);
     defs = defs.filter(function(elem, pos) {
-        return defs.indexOf(elem) == pos;
+        return defs.indexOf(elem) === pos;
     });
 
     var that = this;
@@ -85,7 +85,9 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
         var total = defs.length;
         return function() {
             total = total-1;
-            if (total < 1) callback();
+            if (total < 1) {
+                callback();
+            }
         };
     })();
 
@@ -95,6 +97,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
         var BASE_SERVER_URL = '/manage/v2/' + url;
         var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings[typeName];
         var manager = that.getHttpManager();
+
         //Check if exists
         manager.get({
             endpoint: UPDATE_SERVER_URL
@@ -113,7 +116,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                         logger.error('Error when creating %s [Error %s]', item, response.statusCode);
                         console.error(response.data);
                         process.exit(1);
-                    };
+                    }
                });
             } else if (response.statusCode === 200) {
                //Already present.
@@ -133,7 +136,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                             logger.error('Error when updating %s [Error %s]', item, response.statusCode);
                             console.error(response.data);
                             process.exit(1);
-                        };
+                        }
                    });
                } else {
                    //nothing to send. We are done with this
@@ -143,20 +146,20 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                 logger.error('Error when checking %s [Error %s]', item, response.statusCode);
                 console.error(response.data);
                 process.exit(1);
-            };
+            }
         });
     });
 };
 
 DBManager.prototype.removeMultiObjects = function(type, url, typeName, params, callback) {
 
-    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true)
-    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false)
+    var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true);
+    var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false);
 
     //merge lists and remove duplicates
     var defs = baseDefs.concat(envDefs);
     defs = defs.filter(function(elem, pos) {
-        return defs.indexOf(elem) == pos;
+        return defs.indexOf(elem) === pos;
     });
 
     var that = this;
@@ -165,7 +168,9 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params, c
         var total = defs.length;
         return function() {
             total = total-1;
-            if (total < 1) callback();
+            if (total < 1) {
+                callback();
+            }
         };
     })();
 
@@ -192,7 +197,7 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params, c
                         logger.error('Error when deleting %s [Error %s]', item, response.statusCode);
                         console.error(response.data);
                         process.exit(1);
-                    };
+                    }
                });
             } else if (response.statusCode === 404) {
                 //already removed
@@ -201,7 +206,7 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params, c
                 logger.error('Error when checking %s [Error %s]', item, response.statusCode);
                 console.error(response.data);
                 process.exit(1);
-            };
+            }
         });
     });
 };

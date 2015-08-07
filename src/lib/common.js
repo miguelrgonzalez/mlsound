@@ -4,27 +4,27 @@ var mlutil = require('marklogic/lib/mlutil.js');
 var path = require('path');
 var requester = require('marklogic/lib/requester.js');
 var valcheck = require('core-util-is');
-JSON.minify = require("node-json-minify");
+JSON.minify = require('node-json-minify');
 
 var mergeSettings = function(defaults, extra) {
 
-    var parseFile = function(file, fail_on_error) {
+    var parseFile = function(file, failOnError) {
         try{
             //minify takes care of comments, and other non-json stuff
             return JSON.parse(JSON.minify(fs.readFileSync(file, 'utf8')));
         } catch (err) {
-            if (err.code === 'ENOENT' && fail_on_error) {
+            if (err.code === 'ENOENT' && failOnError) {
                 console.error('%s not found', file);
                 process.exit(1);
             } else if (err instanceof SyntaxError) {
                 console.error('%s is not properly formatted %s', file, err);
                 process.exit(1);
             }
-        };
+        }
     };
 
     var merge = function(options1, options2) {
-        for(setting in options2) {
+        for(var setting in options2) {
             if (typeof options2[setting] === 'object') {
                 //recursively merge
                 options1[setting] = merge(options1[setting], options2[setting]);
