@@ -48,13 +48,13 @@ to a problem, that allows us to duplicate it
 
 #### Fork mlsound
 
-Fork the project [on GitHub](https://github.com/marklogic/mlsound/fork) and clone
+Fork the project [on GitHub](https://github.com/miguelrgonzalez/mlsound/fork) and clone
 your copy.
 
 ```sh
 $ git clone git@github.com:username/mlsound.git
 $ cd mlsound
-$ git remote add upstream git://github.com/marklogic/mlsound.git
+$ git remote add upstream git://github.com/miguelrgonzalez/mlsound.git
 ```
 
 All bug fixes and new features go into the master branch.
@@ -179,5 +179,5 @@ from the main (upstream) repository:
     git pull --ff upstream master
     ```
 
-[issue tracker]: https://github.com/marklogic/mlsound/issues
+[issue tracker]: https://github.com/miguelrgonzalez/mlsound/issues
 [.editorconfig]: http://editorconfig.org/
