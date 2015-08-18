@@ -47,7 +47,6 @@ DBManager.buildForestsByHost = function(dbSettings) {
 
     var manager = this.getHttpManager();
     forests.forEach(function(forest) {
-        console.log('forest: ' + forest['forest-name']);
         forestNames.push(forest['forest-name']);
         manager.get({
             endpoint: '/manage/v2/forests/' + forest['forest-name']
@@ -84,7 +83,6 @@ DBManager.initializeDatabase = function(type, callback) {
     var manager = this.getHttpManager();
 
     if (!Array.isArray(settings.forest)) {
-        console.log('forest setting: ' + JSON.stringify(settings.forest));
         // settings.forest may be an object that contains a forests-per-host value.
         settings.forest = this.buildForestsByHost(settings);
     }
@@ -108,6 +106,7 @@ DBManager.initializeDatabase = function(type, callback) {
                         } else {
                             logger.error('Error when creating %s database [Error %s]', type, response.statusCode);
                             logger.error(response.data.errorResponse.message);
+                            logger.debug('Database settings: ' + JSON.stringify(settings));
                             process.exit(1);
                         }
 
