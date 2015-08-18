@@ -59,7 +59,7 @@ DBManager.buildForestsByHost = function(dbSettings) {
                     body : forest
                 }).result(function(response) {
                     if (response.statusCode === 201) {
-                        // yay. do nothing. 
+                        // yay. do nothing.
                     } else {
                         logger.error('Error when creating %s [Error %s]', forest, response.statusCode);
                         console.error(response.data);
@@ -107,7 +107,7 @@ DBManager.initializeDatabase = function(type, callback) {
                             logger.info(type + ' database created');
                         } else {
                             logger.error('Error when creating %s database [Error %s]', type, response.statusCode);
-                            logger.error(response.data);
+                            logger.error(response.data.errorResponse.message);
                             process.exit(1);
                         }
 

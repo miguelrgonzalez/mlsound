@@ -130,7 +130,7 @@ DBManager.removeForests = function(type, level, callback) {
     var dbName = settings['database-name'];
     var dbPropsURL = '/manage/v2/databases/' + dbName + '/properties';
 
-    logger.info('Removing ' + type + ' forets');
+    logger.info('Removing ' + type + ' forests');
 
     // Ask for the database properties to get the list of forests
     manager.get({
