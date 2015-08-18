@@ -119,12 +119,52 @@ DBManager.initializeForests = function(callback) {
     this.initializeMultiObjects('forests', 'forests', 'forest-name', supported, callback);
 };
 
-DBManager.removeForests = function(level, callback) {
+DBManager.removeForests = function(type, level, callback) {
     //check level value
     if (level && !/(full|config-only)/i.test(level)) {
         logger.error('Only full and config-only allowed for level parameter');
         process.exit(1);
     }
-    this.removeMultiObjects('forests', 'forests', 'forest-name', { 'level' : level}, callback);
+    var manager = this.getHttpManager();
+    var settings = common.objectSettings('databases/' + type, this.env);
+    var dbName = settings['database-name'];
+    var dbPropsURL = '/manage/v2/databases/' + dbName + '/properties';
+
+    logger.info('Removing ' + type + ' forets');
+
+    // Ask for the database properties to get the list of forests
+    manager.get({
+        endpoint: dbPropsURL
+    }).
+    result(function(response) {
+        if (response.statusCode === 200) {
+            var forests = response.data.forest;
+            if (forests) {
+                forests.forEach(function(forest) {
+                    logger.debug('detaching forest ' + forest);
+                    manager.post({
+                        endpoint: '/manage/v2/forests/' + forest,
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded'
+                        },
+                        body: 'state=detach'
+                    })
+                    .result(function(response) {
+                        logger.debug('deleting forest ' + forest);
+                        manager.remove({
+                            endpoint: '/manage/v2/forests/' + forest,
+                            params: {
+                                level: level
+                            }
+                        });
+                    });
+                });
+            }
+        } else if (response.statusCode === 404) {
+            console.log('forests already deleted');
+        }
+        if (callback)
+            callback();
+    });
 };
 

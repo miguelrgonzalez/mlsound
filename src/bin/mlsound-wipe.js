@@ -36,12 +36,14 @@ prompt.get({
             //response times. Without waiting, it'll throw either 500 or 503 errors
             logger.warning('Waiting for server restart');
             setTimeout(function() {
-                dbManager.removeDatabase('content', undefined, function() {
-                    dbManager.removeDatabase('modules', undefined, function() {
-                        dbManager.removeForests('full', function() {
-                            dbManager.removeUsers(function() {
-                                dbManager.removeRoles(function() {
-                                    logger.info('Project wiped!');
+                dbManager.removeForests('content', 'full', function() {
+                    dbManager.removeForests('modules', 'full', function() {
+                        dbManager.removeDatabase('content', undefined, function() {
+                            dbManager.removeDatabase('modules', undefined, function() {
+                                dbManager.removeUsers(function() {
+                                    dbManager.removeRoles(function() {
+                                        logger.info('Project wiped!');
+                                    });
                                 });
                             });
                         });
