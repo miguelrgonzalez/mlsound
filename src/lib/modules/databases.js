@@ -31,7 +31,15 @@ DBManager.databaseOperation = function(operation, database, callback) {
     });
 };
 
-DBManager.buildForestsByHost = function(dbSettings) {
+DBManager.buildForestsByHost = function(dbSettings, callback) {
+
+    // from http://stackoverflow.com/questions/1267283/how-can-i-create-a-zerofilled-value-using-javascript
+    function pad(number, padding, character) {
+        var pad_char = typeof character !== 'undefined' ? character : '0';
+        var buffer = new Array(1 + padding).join(pad_char);
+        return (buffer + number).slice(-buffer.length);
+    }
+
     var count = dbSettings.forest['forests-per-host'];
     // idenfity the hosts
     var hosts = this.getConfiguration('hosts');
@@ -41,24 +49,38 @@ DBManager.buildForestsByHost = function(dbSettings) {
         var hostSettings = common.objectSettings('hosts/' + host, this.env);
         console.log('host is: ' + hostSettings['host-name']);
         for (var i = 0; i < count; i++) {
-            forests.push({'host': hostSettings['host-name'], 'forest-name': dbSettings['database-name'] + '-' + (index * count + i)});
+            forests.push({
+                'host': hostSettings['host-name'],
+                'forest-name': dbSettings['database-name'] + '-' + pad(index, 3) + '-' + pad(i, 3)
+            });
         }
     });
+
+    var outStandingRequests = forests.length;
+    var checkFinished = function() {
+        if (outStandingRequests === 0 && callback) {
+            callback(forestNames);
+        }
+    };
 
     var manager = this.getHttpManager();
     forests.forEach(function(forest) {
         forestNames.push(forest['forest-name']);
         manager.get({
             endpoint: '/manage/v2/forests/' + forest['forest-name']
-        }).result(function(response) {
+        })
+        .result(function(response) {
             if (response.statusCode === 404) {
                 console.log('creating forest ' + forest['forest-name']);
                 manager.post({
                     endpoint : '/manage/v2/forests',
                     body : forest
-                }).result(function(response) {
+                })
+                .result(function(response) {
                     if (response.statusCode === 201) {
-                        // yay. do nothing.
+                        // yay. We're done with this one.
+                        --outStandingRequests;
+                        checkFinished();
                     } else {
                         logger.error('Error when creating %s [Error %s]', forest, response.statusCode);
                         console.error(response.data);
@@ -66,6 +88,9 @@ DBManager.buildForestsByHost = function(dbSettings) {
                     }
                });
             } else if (response.statusCode === 200) {
+                // Already exists, no need to create
+                --outStandingRequests;
+                checkFinished();
             } else {
                 logger.error('Error when checking %s [Error %s]', forest, response.statusCode);
                 console.error(response.data);
@@ -73,20 +98,12 @@ DBManager.buildForestsByHost = function(dbSettings) {
             }
         });
     });
-    return forestNames;
 };
 
-DBManager.initializeDatabase = function(type, callback) {
-    var settings = common.objectSettings('databases/' + type, this.env);
+DBManager.buildDatabase = function(settings, type, callback) {
     var BASE_SERVER_URL = '/manage/v2/databases';
     var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings['database-name'];
     var manager = this.getHttpManager();
-
-    if (!Array.isArray(settings.forest)) {
-        // settings.forest may be an object that contains a forests-per-host value.
-        settings.forest = this.buildForestsByHost(settings);
-    }
-
     //Check if server exists
     manager.get({
         endpoint: UPDATE_SERVER_URL
@@ -137,6 +154,22 @@ DBManager.initializeDatabase = function(type, callback) {
         }
 
     });
+};
+
+DBManager.initializeDatabase = function(type, callback) {
+    var that = this;
+    var settings = common.objectSettings('databases/' + type, this.env);
+
+    if (!Array.isArray(settings.forest)) {
+        // settings.forest may be an object that contains a forests-per-host value.
+        this.buildForestsByHost(settings, function(forestNames) {
+            settings.forest = forestNames;
+            that.buildDatabase(settings, type, callback);
+        });
+    } else {
+        that.buildDatabase(settings, type, callback);
+    }
+
 };
 
 DBManager.removeDatabase = function(type, removeForest, callback) {
