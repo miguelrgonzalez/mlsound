@@ -8,7 +8,7 @@ var prompt = require('prompt');
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
 
-JSON.minify = require("node-json-minify");
+JSON.minify = require('node-json-minify');
 
 program.parse(process.argv);
 
@@ -130,11 +130,11 @@ ncp(path.join(path.resolve(__dirname), '../templates/'),
             }
         }, function(err, result) {
                 var settings = JSON.parse(JSON.minify(
-                            fs.readFileSync(path.join(name,'settings/environments/local/connection.json'), 'utf8')))
+                            fs.readFileSync(path.join(name,'settings/environments/local/connection.json'), 'utf8')));
                 settings.connection.host = result.host;
                 //write file back
                 fs.writeFileSync(path.join(name,'settings/environments/local/connection.json'),
-                    JSON.stringify(settings, null, 4), 'utf8')
+                    JSON.stringify(settings, null, 4), 'utf8');
 
                 changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),
                                     'host', result.host);
@@ -149,31 +149,31 @@ ncp(path.join(path.resolve(__dirname), '../templates/'),
                 //Adding file headers
                 addFileHeader(path.join(name, 'settings/base-configuration/databases/content.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/databases/[id-or-name]/properties\n' +
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/databases/modules.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/databases/[id-or-name]/properties\n' +
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/servers/http.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/servers/[id-or-name]/properties\n' +
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/security/roles/role-01.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/roles/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/security/users/user-01.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/users/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/forests/content-01.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/forests/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/forests/modules-01.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/forests/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n')
+                        '//for a complete list of possible parameters\n');
 
                 addFileHeader(path.join(name, 'settings/base-configuration/connection.json'),
                         '//Management API connection details\n');

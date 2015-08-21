@@ -14,11 +14,13 @@ DBManager.databaseOperation = function(operation, database, callback) {
     //Issue command
     manager.post({
         endpoint: '/manage/v2/databases/' + database,
-        body: { "operation" : operation }
+        body: { 'operation' : operation }
     }).
     result(function(response) {
         if (response.statusCode === 200) {
-            if(callback) callback();
+            if(callback) {
+                callback();
+            }
         }
         else {
             logger.error('Error when issuing database operation %s at %s [Error %s]',
@@ -32,7 +34,7 @@ DBManager.databaseOperation = function(operation, database, callback) {
 DBManager.initializeDatabase = function(type, callback) {
     var settings = common.objectSettings('databases/' + type, this.env);
     var BASE_SERVER_URL = '/manage/v2/databases';
-    var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings["database-name"];
+    var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings['database-name'];
     var manager = this.getHttpManager();
     //Check if server exists
     manager.get({
@@ -56,8 +58,9 @@ DBManager.initializeDatabase = function(type, callback) {
                             process.exit(1);
                         }
 
-                        if (callback)
+                        if (callback) {
                             callback();
+                        }
                 });
         } else if (response.statusCode === 200) {
             manager.put(
@@ -71,8 +74,9 @@ DBManager.initializeDatabase = function(type, callback) {
                             process.exit(1);
                         }
 
-                        if (callback)
+                        if (callback) {
                             callback();
+                        }
                 });
         } else {
             logger.error('Error when checking %s database [Error %s]', type, response.statusCode);
@@ -88,9 +92,9 @@ DBManager.removeDatabase = function(type, removeForest, callback) {
     if (removeForest && !/(configuration|data)/i.test(removeForest)) {
         logger.error('Only configuration and data allowed for removeForest parameter');
         process.exit(1);
-    };
+    }
     var settings = common.objectSettings('databases/' + type, this.env);
-    var SERVER_URL = '/manage/v2/databases/' + settings["database-name"];
+    var SERVER_URL = '/manage/v2/databases/' + settings['database-name'];
     var manager = this.getHttpManager();
     //Check if server exists
     manager.get({
@@ -109,13 +113,15 @@ DBManager.removeDatabase = function(type, removeForest, callback) {
                             process.exit(1);
                         }
 
-                        if (callback)
+                        if (callback) {
                             callback();
+                        }
                 });
         } else if (response.statusCode === 404) {
             //database already removed
-            if (callback)
+            if (callback) {
                 callback();
+            }
         } else {
             logger.error('Error when deleting %s database [Error %s]', type, response.statusCode);
             logger.error(response.data);
@@ -130,14 +136,16 @@ DBManager.loadDocuments = function(folder, database, callback) {
     var settings = mlutil.copyProperties(this.settings.connection);
     //Need to connect to Rest API, not management one
     settings.port = this.httpSettings.port;
-    settings.database = database
+    settings.database = database;
     var db = marklogic.createDatabaseClient(settings);
 
     recursive(folder, function (err, files) {
         var callBackwhenDone = (function() { var total = files.length;
             return function() {
                 total = total-1;
-                if (total < 1) callback();
+                if (total < 1) {
+                    callback();
+                }
             };
         })();
 

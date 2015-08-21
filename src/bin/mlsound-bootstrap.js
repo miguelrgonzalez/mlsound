@@ -14,7 +14,7 @@ program
 
 logger.info('Bootstraping project into ' + program.env);
 
-var dbManager = database.createDBManager(program.env)
+var dbManager = database.createDBManager(program.env);
 
 //groups
 dbManager.initializeGroups(function() {
@@ -49,7 +49,7 @@ dbManager.initializeGroups(function() {
                                     }, function(err, result) {
                                         if(result.answer === 'Y'){
                                             dbManager.restartGroup (function() {
-                                                logger.info('Server group on ' + program.env + ' restarted successfully')
+                                                logger.info('Server group on ' + program.env + ' restarted successfully');
                                             });
                                         }
                                     });

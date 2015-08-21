@@ -17,30 +17,30 @@ if (!/(code|data|schemas)/i.test(name)) {
     process.exit(1);
 }
 
-var dbManager = database.createDBManager(program.env)
+var dbManager = database.createDBManager(program.env);
 
 var actions = {
     'code' : function() {
         var settings = common.objectSettings('servers/http', program.env);
-        dbManager.databaseOperation('clear-database', settings["modules-database"],
+        dbManager.databaseOperation('clear-database', settings['modules-database'],
                 function() {
-                    logger.info('%s successfully cleaned', settings["modules-database"]);
+                    logger.info('%s successfully cleaned', settings['modules-database']);
                 });
     },
 
     'data' : function() {
         var settings = common.objectSettings('servers/http', program.env);
-        dbManager.databaseOperation('clear-database', settings["content-database"],
+        dbManager.databaseOperation('clear-database', settings['content-database'],
                 function() {
-                    logger.info('%s successfully cleaned', settings["content-database"]);
+                    logger.info('%s successfully cleaned', settings['content-database']);
                 });
     },
 
     'schemas' : function() {
         var settings = common.objectSettings('databases/content', program.env);
-        dbManager.databaseOperation('clear-database', settings["schema-database"],
+        dbManager.databaseOperation('clear-database', settings['schema-database'],
                 function() {
-                    logger.info('%s successfully cleaned', settings["schema-database"]);
+                    logger.info('%s successfully cleaned', settings['schema-database']);
                 });
     }
 };

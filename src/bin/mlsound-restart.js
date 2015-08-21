@@ -11,7 +11,7 @@ var databaseClient = function() {
             return client;
         } else {
             client = marklogic.createDatabaseClient(SETTINGS.connection);
-            return client
+            return client;
         }
     }();
 };
@@ -24,7 +24,7 @@ program
 
 logger.info('Restarting environment ' + program.env);
 
-var dbManager = database.createDBManager(program.env)
+var dbManager = database.createDBManager(program.env);
 dbManager.restartGroup (function() {
-    logger.info('Server group on ' + program.env + ' restarted successfully')
+    logger.info('Server group on ' + program.env + ' restarted successfully');
 });
