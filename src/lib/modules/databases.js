@@ -31,8 +31,7 @@ DBManager.databaseOperation = function(operation, database, callback) {
     });
 };
 
-DBManager.initializeDatabase = function(type, callback) {
-    var settings = common.objectSettings('databases/' + type, this.env);
+DBManager.buildDatabase = function(settings, type, callback) {
     var BASE_SERVER_URL = '/manage/v2/databases';
     var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings['database-name'];
     var manager = this.getHttpManager();
@@ -54,7 +53,8 @@ DBManager.initializeDatabase = function(type, callback) {
                             logger.info(type + ' database created');
                         } else {
                             logger.error('Error when creating %s database [Error %s]', type, response.statusCode);
-                            logger.error(response.data);
+                            logger.error(response.data.errorResponse.message);
+                            logger.debug('Database settings: ' + JSON.stringify(settings));
                             process.exit(1);
                         }
 
@@ -85,6 +85,22 @@ DBManager.initializeDatabase = function(type, callback) {
         }
 
     });
+};
+
+DBManager.initializeDatabase = function(type, callback) {
+    var that = this;
+    var settings = common.objectSettings('databases/' + type, this.env);
+
+    if (!Array.isArray(settings.forest)) {
+        // settings.forest may be an object that contains a forests-per-host value.
+        this.buildForestsByHost(settings, function(forestNames) {
+            settings.forest = forestNames;
+            that.buildDatabase(settings, type, callback);
+        });
+    } else {
+        that.buildDatabase(settings, type, callback);
+    }
+
 };
 
 DBManager.removeDatabase = function(type, removeForest, callback) {
