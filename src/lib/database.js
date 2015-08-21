@@ -70,10 +70,9 @@ DBManager.prototype.getConfigurationFiles = function(folder, failOnError) {
 };
 
 DBManager.prototype.getConfiguration = function(type) {
-    console.log('requesting ' + type);
     if (!this.configuration[type]) {
-        var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true)
-        var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false)
+        var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true);
+        var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false);
 
         //merge lists and remove duplicates
         var defs = baseDefs.concat(envDefs);
