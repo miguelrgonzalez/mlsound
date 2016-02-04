@@ -4,6 +4,7 @@ var database = require('../lib/database.js');
 var program = require('commander');
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
+var prompt = require('prompt');
 
 program
     .option('-e, --env [environment]', 'Environment', 'local')
@@ -19,30 +20,37 @@ if (!/(code|data|schemas)/i.test(name)) {
 
 var dbManager = database.createDBManager(program.env);
 
-var actions = {
-    'code' : function() {
-        var settings = common.objectSettings('servers/http', program.env);
-        dbManager.loadDocuments('src', settings['modules-database'],
-                function() {
-                    logger.info('Code successfully loaded');
-                });
-    },
+prompt.message = 'mlsound'.red;
+prompt.override = dbManager.settings.connection;
+prompt.start();
+prompt.get(['password'], function(err, result) {
+    dbManager.settings.connection.password = result.password;
 
-    'data' : function() {
-        var settings = common.objectSettings('servers/http', program.env);
-        dbManager.loadDocuments('data', settings['content-database'],
-                function() {
-                    logger.info('Data successfully loaded');
-                });
-    },
+    var actions = {
+        'code' : function() {
+            var settings = common.objectSettings('servers/http', program.env);
+            dbManager.loadDocuments('src', settings['modules-database'],
+                    function() {
+                        logger.info('Code successfully loaded');
+                    });
+        },
 
-    'schemas' : function() {
-        var settings = common.objectSettings('databases/content', program.env);
-        dbManager.loadDocuments('schemas', settings['schema-database'],
-                function() {
-                    logger.info('Schemas successfully loaded');
-                });
-    }
-};
+        'data' : function() {
+            var settings = common.objectSettings('servers/http', program.env);
+            dbManager.loadDocuments('data', settings['content-database'],
+                    function() {
+                        logger.info('Data successfully loaded');
+                    });
+        },
 
-actions[name]();
+        'schemas' : function() {
+            var settings = common.objectSettings('databases/content', program.env);
+            dbManager.loadDocuments('schemas', settings['schema-database'],
+                    function() {
+                        logger.info('Schemas successfully loaded');
+                    });
+        }
+    };
+
+    actions[name]();
+});

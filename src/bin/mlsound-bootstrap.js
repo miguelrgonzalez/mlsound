@@ -16,14 +16,20 @@ logger.info('Bootstraping project into ' + program.env);
 
 var dbManager = database.createDBManager(program.env);
 
-//groups
-dbManager.initializeGroups(function() {
-    //hosts
-    dbManager.initializeHosts(function() {
-    //forests
-        dbManager.initializeForests(function() {
-            //databases
-            dbManager.initializeDatabase('content', function() {
+prompt.message = 'mlsound'.red;
+prompt.override = dbManager.settings.connection;
+prompt.start();
+prompt.get(['password'], function(err, result) {
+    dbManager.settings.connection.password = result.password;
+
+    //groups
+    dbManager.initializeGroups(function() {
+        //hosts
+        dbManager.initializeHosts(function() {
+            //forests
+            dbManager.initializeForests(function() {
+                //databases
+                dbManager.initializeDatabase('content', function() {
                 dbManager.initializeDatabase('modules', function() {
                     //roles
                     dbManager.initializeRoles(function() {
@@ -57,6 +63,7 @@ dbManager.initializeGroups(function() {
                             });
                         });
                     });
+                });
                 });
             });
         });

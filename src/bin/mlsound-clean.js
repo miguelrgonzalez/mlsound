@@ -4,6 +4,7 @@ var database = require('../lib/database.js');
 var program = require('commander');
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
+var prompt = require('prompt');
 
 program
     .option('-e, --env [environment]', 'Environment', 'local')
@@ -19,30 +20,37 @@ if (!/(code|data|schemas)/i.test(name)) {
 
 var dbManager = database.createDBManager(program.env);
 
-var actions = {
-    'code' : function() {
-        var settings = common.objectSettings('servers/http', program.env);
-        dbManager.databaseOperation('clear-database', settings['modules-database'],
-                function() {
-                    logger.info('%s successfully cleaned', settings['modules-database']);
-                });
-    },
+prompt.message = 'mlsound'.red;
+prompt.override = dbManager.settings.connection;
+prompt.start();
+prompt.get(['password'], function(err, result) {
+    dbManager.settings.connection.password = result.password;
 
-    'data' : function() {
-        var settings = common.objectSettings('servers/http', program.env);
-        dbManager.databaseOperation('clear-database', settings['content-database'],
-                function() {
-                    logger.info('%s successfully cleaned', settings['content-database']);
-                });
-    },
+    var actions = {
+        'code' : function() {
+            var settings = common.objectSettings('servers/http', program.env);
+            dbManager.databaseOperation('clear-database', settings['modules-database'],
+                    function() {
+                        logger.info('%s successfully cleaned', settings['modules-database']);
+                    });
+        },
 
-    'schemas' : function() {
-        var settings = common.objectSettings('databases/content', program.env);
-        dbManager.databaseOperation('clear-database', settings['schema-database'],
-                function() {
-                    logger.info('%s successfully cleaned', settings['schema-database']);
-                });
-    }
-};
+        'data' : function() {
+            var settings = common.objectSettings('servers/http', program.env);
+            dbManager.databaseOperation('clear-database', settings['content-database'],
+                    function() {
+                        logger.info('%s successfully cleaned', settings['content-database']);
+                    });
+        },
 
-actions[name]();
+        'schemas' : function() {
+            var settings = common.objectSettings('databases/content', program.env);
+            dbManager.databaseOperation('clear-database', settings['schema-database'],
+                    function() {
+                        logger.info('%s successfully cleaned', settings['schema-database']);
+                    });
+        }
+    };
+
+    actions[name]();
+});
