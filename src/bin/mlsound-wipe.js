@@ -30,26 +30,32 @@ prompt.get({
 }, function(err, result) {
     if(result.answer === 'Y'){
         var dbManager = database.createDBManager(program.env);
-        dbManager.removeServer('http', function() {
-            //wait 3 seconds before trying to do anything else
-            //removing an application server seems to have an impact on server
-            //response times. Without waiting, it'll throw either 500 or 503 errors
-            logger.warning('Waiting for server restart');
-            setTimeout(function() {
-                dbManager.removeForests('content', 'full', function() {
-                    dbManager.removeForests('modules', 'full', function() {
-                        dbManager.removeDatabase('content', undefined, function() {
-                            dbManager.removeDatabase('modules', undefined, function() {
-                                dbManager.removeUsers(function() {
-                                    dbManager.removeRoles(function() {
-                                        logger.info('Project wiped!');
+        prompt.message = 'mlsound'.red;
+        prompt.override = dbManager.settings.connection;
+        prompt.start();
+        prompt.get(['password'], function(err, result) {
+            dbManager.settings.connection.password = result.password;
+                dbManager.removeServer('http', function() {
+                    //wait 3 seconds before trying to do anything else
+                    //removing an application server seems to have an impact on server
+                    //response times. Without waiting, it'll throw either 500 or 503 errors
+                    logger.warning('Waiting for server restart');
+                    setTimeout(function() {
+                        dbManager.removeForests('content', 'full', function() {
+                            dbManager.removeForests('modules', 'full', function() {
+                                dbManager.removeDatabase('content', undefined, function() {
+                                    dbManager.removeDatabase('modules', undefined, function() {
+                                        dbManager.removeUsers(function() {
+                                            dbManager.removeRoles(function() {
+                                                logger.info('Project wiped!');
+                                            });
+                                        });
                                     });
                                 });
                             });
                         });
-                    });
+                    }, 3000);
                 });
-            }, 3000);
         });
     }
 });
