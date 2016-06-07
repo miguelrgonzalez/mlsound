@@ -1,7 +1,7 @@
 {
     "server-name" : "http-server-name",
     "group-name" : "Default",
-    "root" : "/",
+    "root" : "\/",
     "modules-database" : "Modules",
     "content-database" : "Documents",
     "port" : 8003

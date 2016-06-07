@@ -5,6 +5,6 @@
     "connection" : {
         "host":     "localhost",
         "user":     "admin",
-        "password": "admin"
+        "password": "password"
     }
 }

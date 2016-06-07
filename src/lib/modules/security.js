@@ -1,17 +1,32 @@
+var Promise = require('bluebird');
 var DBManager = module.exports;
 
-DBManager.initializeUsers = function(callback) {
-    this.initializeMultiObjects('security/users', 'users', 'user-name', undefined, callback);
+DBManager.initializeUsers = function() {
+	var that = this;
+	return new Promise(function(resolve, reject){
+    	that.initializeMultiObjects('security/users', 'users', 'user-name', undefined, undefined).then(function(msg){resolve(msg);});
+	});
 };
 
-DBManager.initializeRoles = function(callback) {
-    this.initializeMultiObjects('security/roles', 'roles', 'role-name', undefined, callback);
+DBManager.initializeRoles = function() {
+	var that = this;
+	return new Promise(function(resolve, reject){
+    	that.initializeMultiObjects('security/roles', 'roles', 'role-name', undefined, undefined).then(function(msg){resolve(msg);});
+	});
 };
 
-DBManager.removeUsers = function(callback) {
-    this.removeMultiObjects('security/users', 'users', 'user-name', undefined, callback);
+DBManager.removeUsers = function() {
+	var that = this;
+	return new Promise(function(resolve, reject){
+    	that.removeMultiObjects('security/users', 'users', 'user-name', undefined)
+    	.done(function(msg){resolve(msg);});
+	});
 };
 
-DBManager.removeRoles = function(callback) {
-    this.removeMultiObjects('security/roles', 'roles', 'role-name', undefined, callback);
+DBManager.removeRoles = function() {
+	var that = this;
+	return new Promise(function(resolve, reject){
+    	that.removeMultiObjects('security/roles', 'roles', 'role-name', undefined)
+    	.done(function(msg){resolve(msg);});;
+	});
 };

@@ -29,26 +29,35 @@ prompt.get(['password'], function(err, result) {
     var actions = {
         'code' : function() {
             var settings = common.objectSettings('servers/http', program.env);
-            dbManager.databaseOperation('clear-database', settings['modules-database'],
-                    function() {
-                        logger.info('%s successfully cleaned', settings['modules-database']);
-                    });
+            dbManager.databaseOperation('clear-database', settings['modules-database'])
+                .catch(function(err){
+                    logger.error(err);
+                })
+                .done(function(msg) {
+                    logger.info(msg + ' successfully cleaned');
+                });
         },
 
         'data' : function() {
             var settings = common.objectSettings('servers/http', program.env);
-            dbManager.databaseOperation('clear-database', settings['content-database'],
-                    function() {
-                        logger.info('%s successfully cleaned', settings['content-database']);
-                    });
+            dbManager.databaseOperation('clear-database', settings['content-database'])
+                .catch(function(err){
+                    logger.error(err);
+                })
+                .done(function(msg) {
+                    logger.info(msg + ' successfully cleaned');
+                });
         },
 
         'schemas' : function() {
             var settings = common.objectSettings('databases/content', program.env);
-            dbManager.databaseOperation('clear-database', settings['schema-database'],
-                    function() {
-                        logger.info('%s successfully cleaned', settings['schema-database']);
-                    });
+            dbManager.databaseOperation('clear-database', settings['schema-database'])
+                .catch(function(err){
+                    logger.error(err);
+                })
+                .done(function(msg) {
+                    logger.info(msg + ' successfully cleaned');
+                });
         }
     };
 

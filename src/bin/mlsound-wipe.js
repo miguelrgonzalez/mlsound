@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+var Promise = require('bluebird');
 var database = require('../lib/database.js');
 var program = require('commander');
 var prompt = require('prompt');
@@ -35,26 +36,35 @@ prompt.get({
         prompt.start();
         prompt.get(['password'], function(err, result) {
             dbManager.settings.connection.password = result.password;
-                dbManager.removeServer('http', function() {
+                dbManager.removeServer('http').then(function(msg) {
+                    logger.info(msg);
                     //wait 3 seconds before trying to do anything else
                     //removing an application server seems to have an impact on server
                     //response times. Without waiting, it'll throw either 500 or 503 errors
                     logger.warning('Waiting for server restart');
-                    setTimeout(function() {
-                        dbManager.removeForests('content', 'full', function() {
-                            dbManager.removeForests('modules', 'full', function() {
-                                dbManager.removeDatabase('content', undefined, function() {
-                                    dbManager.removeDatabase('modules', undefined, function() {
-                                        dbManager.removeUsers(function() {
-                                            dbManager.removeRoles(function() {
-                                                logger.info('Project wiped!');
-                                            });
-                                        });
-                                    });
-                                });
-                            });
+                    Promise.delay(3000).then(function(){
+                        Promise.join(
+                            dbManager.removeForests('content', 'full'),
+                            dbManager.removeForests('modules', 'full'),
+                            dbManager.removeDatabase('content', undefined),
+                            dbManager.removeDatabase('modules', undefined),
+                            dbManager.removeUsers(),
+                            dbManager.removeRoles(), 
+                            function(contentForests, modulesForests, contentDb, modulesDb, users, roles){
+                                logger.info(contentForests);
+                                logger.info(modulesForests);
+                                logger.info(contentDb);
+                                logger.info(modulesDb);
+                                logger.info(users);
+                                logger.info(roles);
+                            })
+                        .done(function(){
+                            logger.info('Project wiped!');
                         });
-                    }, 3000);
+                    });
+                }).catch(function(msg){
+                    logger.error(msg);
+                    process.exit(1);
                 });
         });
     }
