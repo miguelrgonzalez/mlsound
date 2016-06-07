@@ -8,6 +8,7 @@ var program = require('commander');
 var prompt = Promise.promisifyAll(require('prompt'));
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
+var dns = Promise.promisifyAll(require('dns'));
 
 JSON.minify = require('node-json-minify');
 
@@ -55,6 +56,27 @@ var addFileHeader = function(file, header) {
     }).catch(function(err){
         logger.error(err);
     });
+};
+
+var hostname = function(name) {
+    //ipv4 and ipv6
+    var ipRegex = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))/;
+    //ip
+    if (ipRegex.test(name)) {
+        logger.info('Reverse lookup on: ' + name);
+        return dns.lookupServiceAsync(name, 8001);
+    //localhost
+    } if (/^localhost$/i.test(name)) {
+        logger.info('Reverse lookup on: ' + name);
+        return dns.lookupAsync(name).
+               then(function(ip) {
+                   //this should be always 127.0.0.1
+                   return dns.lookupServiceAsync(ip, 8001);
+               });
+    //name
+    } else {
+        return Promise.try(function() { return name.trim() });
+    }
 };
 
 //copy default configuration files
@@ -127,17 +149,6 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
         }).then(function(result, err) {
                 var settings = JSON.parse(JSON.minify(
                             fs.readFileSync(path.join(name,'settings/environments/local/connection.json'), 'utf8')));
-                settings.connection.host = result.host;
-                // settings.connection.password = result.password;
-                //write file back
-                fs.writeFileSync(path.join(name,'settings/environments/local/connection.json'), JSON.stringify(settings, null, 4), 'utf8');
-
-                changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),  'host', result.host);
-
-                changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'), 'host', result.host);
-
-                changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'), 'host-name', result.host);
-
                 //Adding file headers
                 addFileHeader(path.join(name, 'settings/base-configuration/databases/content.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/databases/[id-or-name]/properties\n' +
@@ -170,11 +181,30 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                 addFileHeader(path.join(name, 'settings/base-configuration/connection.json'),
                         '//Management API connection details\n');
 
-                addFileHeader(path.join(name, 'settings/environments/local/connection.json'),
-                        '//Management API connection details\n');
+                fs.writeFileSync(path.join(name,'settings/environments/local/connection.json'), JSON.stringify(settings, null, 4), 'utf8');
+                //MarkLogic refers to machines via hostnames
+                hostname(result.host)
+                .then(function(hostname) {
+                    settings.connection.host = hostname;
+                    //write file back
+                    if(name != null && name.trim() != "") {
+                        changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),  'host', hostname);
 
-                logger.warning(' Project created!');
-                logger.info('Please review project/connection settings and adjust as required');
+                        changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'), 'host', hostname);
+
+                        changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'), 'host-name', hostname);
+                    } else {
+                        logger.error("Error while determining hostname");
+                    }
+
+
+                    logger.warning('Project created!');
+                    logger.info('Review project/connection settings and adjust as required');
+                })
+               .catch(function(err){
+                   if(err!=null) logger.error(err);
+               });
+
         });
     })
     .catch(function(err){

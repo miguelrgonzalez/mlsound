@@ -22,7 +22,7 @@ prompt.override = dbManager.settings.connection;
 prompt.start();
 prompt.get(['password'], function(err, result) {
     dbManager.settings.connection.password = result.password;
-    
+
     //groups
     dbManager.initializeGroups().then(function(msg) {
         logger.info(msg.green);
