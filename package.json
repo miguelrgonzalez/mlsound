@@ -11,6 +11,7 @@
   "author": "Miguel Rodriguez <miguel.rodriguez@marklogic.com>",
   "license": "Apache-2.0",
   "dependencies": {
+    "bluebird": "^3.3.4",
     "colors": "^1.1.2",
     "commander": "^2.8.1",
     "conflate": "^1.1.0",
