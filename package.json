@@ -6,7 +6,7 @@
     "mlsound": "src/bin/mlsound.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+      "test": "mocha src/tests"
   },
   "author": "Miguel Rodriguez <miguel.rodriguez@marklogic.com>",
   "license": "Apache-2.0",
@@ -21,6 +21,8 @@
     "ncp": "^2.0.0",
     "node-json-minify": "^0.1.4-a",
     "prompt": "^0.2.14",
-    "recursive-readdir": "^1.2.1"
+    "recursive-readdir": "^1.2.1",
+    "mocha": "^2.5.0",
+    "should": "^10.0.0"
   }
 }
