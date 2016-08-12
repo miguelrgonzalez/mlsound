@@ -1,0 +1,5 @@
+//See https://docs.marklogic.com/REST/POST/manage/v2/groups
+//for a complete list of possible parameters
+{
+    "group-name" : "Default"
+}

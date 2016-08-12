@@ -1,0 +1,6 @@
+{
+    "user-name" : "username",
+    "password" : "change-me!!",
+    "description" : "description",
+    "role" : ["role-name"]
+}

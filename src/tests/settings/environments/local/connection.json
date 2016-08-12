@@ -1,0 +1,10 @@
+{
+    /*
+     * Environment specific settings
+     */
+    "connection" : {
+        "host":     "localhost",
+        "user":     "admin",
+        "password": "password"
+    }
+}

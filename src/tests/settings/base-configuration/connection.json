@@ -1,0 +1,9 @@
+{
+    "connection" : {
+        "host":     "localhost",
+        "port": 8002,
+        "user":     "admin",
+        "password": "admin",
+        "authType": "digest"
+    }
+}
