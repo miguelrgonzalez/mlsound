@@ -8,7 +8,9 @@ var requester = require('marklogic/lib/requester.js');
 var valcheck = require('core-util-is');
 JSON.minify = require('node-json-minify');
 
-var mergeSettings = function(defaults, extra) {
+var mergeSettings = function(defaults, extra, values) {
+
+    values = values || {};
 
     var parseFile = function(file, failOnError) {
         try{
@@ -37,6 +39,24 @@ var mergeSettings = function(defaults, extra) {
         return options1;
     };
 
+    var replace = function(obj) {
+        //Replace Placeholder with intended value
+        for(var prop in obj) {
+            if (typeof obj[prop] === 'object') {
+                obj[prop] = replace(obj[prop]);
+            } else if (obj.hasOwnProperty(prop)) {
+                for (var key in values) {
+                  if (values.hasOwnProperty(key) &&
+                      typeof obj[prop]  === 'string' &&
+                      obj[prop].indexOf(key) > -1) {
+                        obj[prop] = obj[prop].replace(key, values[key]);
+                  }
+                }
+            }
+        }
+        return obj;
+    };
+
     //read defaults
     var defaultsJSON = parseFile(defaults, true);
 
@@ -47,18 +67,25 @@ var mergeSettings = function(defaults, extra) {
         //merge settings
         defaultsJSON = merge(defaultsJSON, extraJSON);
     }
-    //return environment settings
 
+    //replace placeholders
+    defaultsJSON = replace(defaultsJSON);
+
+    //return environment settings
     return defaultsJSON;
 };
 
 /* Merge default and environment settings for a given configuration object*/
 var objectSettings = function(object, env) {
     //merge settings
-    return mergeSettings('settings/base-configuration/' + object +'.json',
-                         'settings/environments/' + env + '/' + object + '.json');
+    var conn = mergeSettings('settings/base-configuration/connection.json',
+                         'settings/environments/' + env + '/connection.json');
 
+    return mergeSettings('settings/base-configuration/' + object +'.json',
+                         'settings/environments/' + env + '/' + object + '.json',
+                         conn["global-values"]);
 };
+
 
 /*
  * Credit goes to marklogic-node-client api /etc/test-lib

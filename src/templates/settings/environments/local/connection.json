@@ -6,5 +6,10 @@
         "host":     "localhost",
         "user":     "admin",
         "password": "password"
+    },
+
+    //You can define value placeholders here
+    "global-values" : {
+        "%%TRIGGERS-DATABASE%%" : "Triggers"
     }
 }

@@ -13,8 +13,8 @@ program
 
 var name = program.args;
 
-if (!/(code|data|schemas)/i.test(name)) {
-    logger.error('Only code, data or schemas are supported');
+if (!/(code|data|schemas|triggers)/i.test(name)) {
+    logger.error('Only code, data, schemas or triggers are supported');
     process.exit(1);
 }
 
@@ -52,6 +52,17 @@ prompt.get(['password'], function(err, result) {
         'schemas' : function() {
             var settings = common.objectSettings('databases/content', program.env);
             dbManager.databaseOperation('clear-database', settings['schema-database'])
+                .catch(function(err){
+                    logger.error(err);
+                })
+                .done(function(msg) {
+                    logger.info(msg + ' successfully cleaned');
+                });
+        },
+
+        'triggers' : function() {
+            var settings = common.objectSettings('databases/content', program.env);
+            dbManager.databaseOperation('clear-database', settings['triggers-database'])
                 .catch(function(err){
                     logger.error(err);
                 })

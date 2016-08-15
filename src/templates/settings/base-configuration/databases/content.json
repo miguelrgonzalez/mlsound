@@ -1,7 +1,7 @@
 {
     "database-name" : "database-name",
     "schema-database" : "Schemas",
-    "triggers-database" : "Triggers",
+    "triggers-database" : "%%TRIGGERS-DATABASE%%",
     "triple-index" : "false",
     "forest" : [ "forest-name" ]
 }

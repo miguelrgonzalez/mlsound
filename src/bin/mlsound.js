@@ -10,7 +10,7 @@ program
     .command('create [name]', 'Create project folder and scaffolding files')
     .command('bootstrap', 'Bootstrap project')
     .command('wipe', 'Wipe project')
-    .command('deploy [module]', 'Deploy [code|data|schemas]')
+    .command('deploy [module]', 'Deploy [code|data|schemas|triggers]')
     .command('clean [module]', 'Clean [code|data|schemas]')
     .command('restart', 'Restart server group')
     .parse(process.argv);
