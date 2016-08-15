@@ -18,63 +18,73 @@ logger.info('Bootstraping project into ' + program.env);
 var dbManager = database.createDBManager(program.env);
 
 prompt.message = 'mlsound'.red;
-prompt.override = dbManager.settings.connection;
+//prompt.override = dbManager.settings.connection;
 prompt.start();
-prompt.get(['password'], function(err, result) {
+prompt.get(
+    {
+        properties : {
+            'password' : {
+                required : true,
+                hidden: true
+            }
+        }
+    },
+    function(err, result) {
     dbManager.settings.connection.password = result.password;
 
     //groups
     dbManager.initializeGroups().then(function(msg) {
         logger.info(msg.green);
         //hosts
-        dbManager.initializeHosts().then(function(msg) {
-            logger.info(msg.green);
-            //forests
-            dbManager.initializeForests().then(function(msg) {
-                logger.info(msg.green);
-                //databases
-                dbManager.initializeDatabase('content').then(function(msg) {
-                    logger.info(msg.green);
-                    dbManager.initializeDatabase('modules').then(function(msg) {
+        return dbManager.initializeHosts();
+    })
+    .then(function(msg) {
+        logger.info(msg.green);
+        //forests
+        return dbManager.initializeForests();
+    }).then(function(msg) {
+        logger.info(msg.green);
+        //databases
+        return dbManager.initializeDatabase('content');
+    }).then(function(msg) {
+        logger.info(msg.green);
+        return dbManager.initializeDatabase('modules');
+    }).then(function(msg) {
+        logger.info(msg.green);
+        //roles
+        return dbManager.initializeRoles();
+    }).then(function(msg) {
+        logger.info(msg.green);
+        //users
+        return dbManager.initializeUsers();
+    }).then(function(msg) {
+        logger.info(msg.green);
+        //Rest API
+        return dbManager.initializeRestAPI();
+    }).then(function(msg) {
+        logger.info(msg.green);
+        //update http server settings
+        dbManager.updateServer('http').done(function() {
+            prompt.message = 'mlsound'.green;
+            prompt.start();
+            prompt.get({
+                properties : {
+                    answer : {
+                        description: 'Do you want to restart now [Y/N]?',
+                        type: 'string',
+                        pattern: /^[YN]$/,
+                        required: true,
+                        default: 'Y',
+                        message : 'Only Y or N supported'
+                    }
+                }
+            }, function(err, result) {
+                if(result.answer === 'Y'){
+                    dbManager.restartGroup().done(function(msg) {
                         logger.info(msg.green);
-                        //roles
-                        dbManager.initializeRoles().then(function(msg) {
-                            logger.info(msg.green);
-                            //users
-                            dbManager.initializeUsers().then(function(msg) {
-                                logger.info(msg.green);
-                                //Rest API
-                                dbManager.initializeRestAPI().then(function(msg) {
-                                    logger.info(msg.green);
-                                    //update http server settings
-                                    dbManager.updateServer('http').done(function() {
-                                        prompt.message = 'mlsound'.green;
-                                        prompt.start();
-                                        prompt.get({
-                                            properties : {
-                                                answer : {
-                                                    description: 'Do you want to restart now [Y/N]?',
-                                                    type: 'string',
-                                                    pattern: /^[YN]$/,
-                                                    required: true,
-                                                    default: 'Y',
-                                                    message : 'Only Y or N supported'
-                                                }
-                                            }
-                                        }, function(err, result) {
-                                            if(result.answer === 'Y'){
-                                                dbManager.restartGroup().done(function(msg) {
-                                                    logger.info(msg.green);
-                                                    logger.info('Server group on ' + program.env + ' restarted successfully');
-                                                });
-                                            }
-                                        });
-                                    });
-                                });
-                            });
-                        });
+                        logger.info('Server group on ' + program.env + ' restarted successfully');
                     });
-                });
+                }
             });
         });
     }).catch(function(err){

@@ -4,6 +4,7 @@ var conflate = require('conflate');
 var fs = require('fs');
 var keys = Object.keys || require('object-keys');
 var marklogic = require('marklogic');
+var mlutil = require('marklogic/lib/mlutil.js');
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
 
@@ -18,6 +19,12 @@ var DBManager = function(env){
     this.configuration = {};
 };
 
+DBManager.prototype.getRestAPIManager = function () {
+    var settings = mlutil.copyProperties(this.settings.connection);
+    settings.port = this.httpSettings.port;
+    return this.getHttpManager(marklogic.createDatabaseClient(settings));
+};
+
 DBManager.prototype.getDatabaseClient = function () {
     if(!this.dbClient){
         this.dbClient = marklogic.createDatabaseClient(this.settings.connection);
@@ -26,7 +33,7 @@ DBManager.prototype.getDatabaseClient = function () {
 };
 
 DBManager.prototype.getHttpManager = function (client) {
-    if(client) {
+    if (client) {
         return common.createHttpManager(client);
     } else {
         if(!this.httpManager){

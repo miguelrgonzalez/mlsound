@@ -1,0 +1,7 @@
+{
+  "debug":false,
+  "document-transform-all":false,
+  "update-policy":"merge-metadata",
+  "validate-options":true,
+  "validate-queries":false
+}

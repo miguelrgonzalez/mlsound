@@ -20,48 +20,58 @@ if (!/(code|data|schemas)/i.test(name)) {
 }
 
 var dbManager = database.createDBManager(program.env);
-prompt.message = 'mlsound'.red;
-prompt.override = dbManager.settings.connection;
-prompt.start();
-prompt.getAsync(['password']).then(function(result, err) {
-    dbManager.settings.connection.password = result.password;
-    var actions = {
-        'code' : function() {
-            var settings = common.objectSettings('servers/http', program.env);
-            dbManager.loadDocuments('src', settings['modules-database'])
-                    .then(function(msg) {
-                        logger.info('Code '+ msg);
-                    }).catch(function(err){
-                        logger.error(err);
-                        process.exit(1);
-                    });
-        },
 
-        'data' : function() {
-            var settings = common.objectSettings('servers/http', program.env);
-            dbManager.loadDocuments('data', settings['content-database'])
-                    .then(function(msg) {
-                        logger.info('Data ' +msg);
-                    }).catch(function(err){
-                        logger.error(err);
-                        process.exit(1);
-                    });
-        },
+var actions = {
+    'code' : function() {
+        logger.info('Deploying application code into ' + program.env);
+        var settings = common.objectSettings('servers/http', program.env);
+        dbManager.loadDocuments('src/app', settings['modules-database'])
+        .then(function(msg) {
+            logger.info(msg.green);
+            return dbManager.deployRestExtensions('src/rest-api/extensions', database);
+        })
+        .then(function(msg) {
+            logger.info(msg.green);
+            return dbManager.deployTransformations('src/rest-api/transformations', database);
+        })
+        .then(function(msg) {
+            logger.info(msg.green);
+            return dbManager.deployOptions('src/rest-api/config/query', database);
+        })
+        .then(function(msg) {
+            logger.info(msg.green);
+            return dbManager.deployProperties('src/rest-api/config/properties', database);
+        })
+        .then(function(msg) {
+            logger.info(msg.green);
+        })
+        .catch(function(err){
+            logger.error(err);
+            process.exit(1);
+        });
+    },
 
-        'schemas' : function() {
-            var settings = common.objectSettings('databases/content', program.env);
-            dbManager.loadDocuments('schemas', settings['schema-database'])
-                    .then(function(msg) {
-                        logger.info('Schemas ' + msg);
-                    }).catch(function(err){
-                        logger.error(err);
-                        process.exit(1);
-                    });
-        }
-    };
+    'data' : function() {
+        var settings = common.objectSettings('servers/http', program.env);
+        dbManager.loadDocuments('data', settings['content-database'])
+        .then(function(msg) {
+            logger.info('Data ' +msg);
+        }).catch(function(err){
+            logger.error(err);
+            process.exit(1);
+        });
+    },
 
-    actions[name]();
-}).catch(function(err){
-    logger.error(err);
-    process.exit(1);
-});
+    'schemas' : function() {
+        var settings = common.objectSettings('databases/content', program.env);
+        dbManager.loadDocuments('schemas', settings['schema-database'])
+        .then(function(msg) {
+            logger.info('Schemas ' + msg);
+        }).catch(function(err){
+            logger.error(err);
+            process.exit(1);
+        });
+    }
+};
+
+actions[name]();

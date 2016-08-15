@@ -1,0 +1,92 @@
+{
+    "options": {
+        "search-option": ["unfiltered"],
+        "page-length": 10,
+        "debug": true,
+        "return-query": true,
+        "term": {
+            "apply": "term",
+            "empty": {
+                "apply": "all-results"
+            },
+            "term-option": ["punctuation-insensitive", "case-insensitive", "stemmed"]
+        },
+        "grammar": {
+            "quotation": "\"",
+            "implicit": "<cts:and-query strength=\"20\" xmlns=\"http://marklogic.com/appservices/search\" xmlns:cts=\"http://marklogic.com/cts\"/>",
+            "starter": [{
+                "strength": "30",
+                "apply": "grouping",
+                "delimiter": ")",
+                "label": "("
+            }, {
+                "strength": "40",
+                "apply": "prefix",
+                "cts-element": "cts:not-query",
+                "label": "-"
+            }],
+            "joiner": [{
+                "strength": "10",
+                "apply": "infix",
+                "cts-element": "cts:or-query",
+                "tokenize": "word",
+                "label": "OR"
+            }, {
+                "strength": "20",
+                "apply": "infix",
+                "cts-element": "cts:and-query",
+                "tokenize": "word",
+                "label": "AND"
+            }, {
+                "strength": "30",
+                "apply": "infix",
+                "cts-element": "cts:near-query",
+                "tokenize": "word",
+                "label": "NEAR"
+            }, {
+                "strength": "30",
+                "apply": "near2",
+                "consume": "2",
+                "cts-element": "cts:near-query",
+                "label": "NEAR/"
+            }, {
+                "strength": "50",
+                "apply": "constraint",
+                "label": ":"
+            }, {
+                "strength": "50",
+                "apply": "constraint",
+                "compare": "LT",
+                "tokenize": "word",
+                "label": "LT"
+            }, {
+                "strength": "50",
+                "apply": "constraint",
+                "compare": "LE",
+                "tokenize": "word",
+                "label": "LE"
+            }, {
+                "strength": "50",
+                "apply": "constraint",
+                "compare": "GT",
+                "tokenize": "word",
+                "label": "GT"
+            }, {
+                "strength": "50",
+                "apply": "constraint",
+                "compare": "GE",
+                "tokenize": "word",
+                "label": "GE"
+            }, {
+                "strength": "50",
+                "apply": "constraint",
+                "compare": "NE",
+                "tokenize": "word",
+                "label": "NE"
+            }]
+        },
+        "sort-order": [{
+            "direction": "descending"
+        }]
+    }
+}

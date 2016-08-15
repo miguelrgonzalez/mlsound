@@ -64,6 +64,8 @@ DBManager.buildDatabase = function(settings, type) {
                             if (response.statusCode !== 204) {
                                 logger.error(response.data);
                                 reject('Error when updating '+type+' database [Error '+response.statusCode+']');
+                            } else {
+                                resolve(type + " database updated");
                             }
                     });
             } else {
@@ -143,9 +145,7 @@ DBManager.loadDocuments = function(folder, database) {
         settings.port = that.httpSettings.port;
         settings.database = database;
         var db = marklogic.createDatabaseClient(settings);
-
         recursive(folder, function (err, files) {
-            logger.info(err);
 
             var callBackwhenDone = (function() {
                 var total = files.length;
@@ -159,6 +159,9 @@ DBManager.loadDocuments = function(folder, database) {
 
             if (err) {
                 reject(folder + ' Folder not found');
+            }
+            if (files.length === 0) {
+                resolve('Nothing to do');
             }
             files.forEach(function(file){
                 var document = fs.readFileSync(file, 'utf8');

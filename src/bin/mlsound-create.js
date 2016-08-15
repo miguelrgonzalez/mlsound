@@ -45,7 +45,12 @@ logger.info('Creating project ' + name);
 
 var changePropertyValue = function(file, property, value) {
     var settings = JSON.parse(JSON.minify(fs.readFileSync(file, 'utf8')));
-    settings[property] = value;
+    var path = property.split('.');
+    var t = settings;
+    for(var i=0; i < path.length-1; i ++) {
+        t = t[path[i]];
+    }
+    t[path[path.length -1]] = value;
     fs.writeFileSync(file ,JSON.stringify(settings, null, 4), 'utf8');
 };
 
@@ -135,8 +140,7 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                     required: true,
                     default: 'localhost',
                     message : 'This host will be used to configure your local environment'
-                }
-                /*,
+                },
                 password : {
                     description: 'Marklogic host password?',
                     type: 'string',
@@ -144,11 +148,9 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                     default: 'password',
                     hidden:true,
                     message : 'This host will be used to connect to your local MarkLogic instance'
-                }*/
+                }
             }
         }).then(function(result, err) {
-                var settings = JSON.parse(JSON.minify(
-                            fs.readFileSync(path.join(name,'settings/environments/local/connection.json'), 'utf8')));
                 //Adding file headers
                 addFileHeader(path.join(name, 'settings/base-configuration/databases/content.json'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/databases/[id-or-name]/properties\n' +
@@ -178,14 +180,10 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                         '//See http://docs.marklogic.com/REST/PUT/manage/v2/forests/[id-or-name]/properties\n'+
                         '//for a complete list of possible parameters\n');
 
-                addFileHeader(path.join(name, 'settings/base-configuration/connection.json'),
-                        '//Management API connection details\n');
-
-                fs.writeFileSync(path.join(name,'settings/environments/local/connection.json'), JSON.stringify(settings, null, 4), 'utf8');
+                changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.password', result.password);
                 //MarkLogic refers to machines via hostnames
                 hostname(result.host)
                 .then(function(hostname) {
-                    settings.connection.host = hostname;
                     //write file back
                     if(name != null && name.trim() != "") {
                         changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),  'host', hostname);
@@ -193,9 +191,12 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                         changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'), 'host', hostname);
 
                         changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'), 'host-name', hostname);
+                        changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.host', hostname);
                     } else {
                         logger.error("Error while determining hostname");
                     }
+
+                    addFileHeader(path.join(name, 'settings/base-configuration/connection.json'), '//Management API connection details\n');
 
 
                     logger.warning('Project created!');

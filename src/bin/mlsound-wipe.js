@@ -32,9 +32,18 @@ prompt.get({
     if(result.answer === 'Y'){
         var dbManager = database.createDBManager(program.env);
         prompt.message = 'mlsound'.red;
-        prompt.override = dbManager.settings.connection;
+        //prompt.override = dbManager.settings.connection;
         prompt.start();
-        prompt.get(['password'], function(err, result) {
+        prompt.get(
+            {
+                properties : {
+                    'password' : {
+                        required : true,
+                        hidden: true
+                    }
+                }
+            },
+            function(err, result) {
             dbManager.settings.connection.password = result.password;
                 dbManager.removeServer('http').then(function(msg) {
                     logger.info(msg);
