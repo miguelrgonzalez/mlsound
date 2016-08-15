@@ -231,64 +231,66 @@ DBManager.deployTriggers = function(database) {
             if (defs.length === 0) {
                 resolve('Nothing to do');
             }
+            that.getDatabaseProperties(database)
+            .then(function(properties) {
+                //Initilialize all
+                defs.forEach(function(item){
+                    var settings = common.objectSettings('triggers/' + item, that.env);
+                    var endpoint = '/manage/LATEST/databases/' + properties["triggers-database"] + '/triggers';
 
-            //Initilialize all
-            defs.forEach(function(item){
-                var settings = common.objectSettings('triggers/' + item, that.env);
-                var endpoint = '/manage/LATEST/databases/' + database + '/triggers';
-
-                manager.get({
-                        endpoint :  endpoint + '/' + settings['name'] + '/properties'
-                }).then(function(resp) {
-                    return new Promise(function(resolve, reject){
-                        resp.result(
-                            function(response) {
-                                if (response.statusCode === 200) {
-                                    //Delete trigger
-                                    logger.info('Trigger ' + item + ' was already created. Deleting');
-                                    manager.remove({
-                                        endpoint :  endpoint + '/' + settings['name']
-                                    }).then(function(resp) {
-                                        resolve();
-                                    });
-                                } else if (response.statusCode === 404) {
-                                    //There was no trigger with this name
-                                    resolve();
-                                } else {
-                                    reject('Error while deleting trigger ' + item);
-                                }
-                            },
-                            function(error) {
-                                reject('Error Cheking for ' + item);
-                                logger.error(error);
-                            }
-                        );
-                    });
-                })
-                //Needs to wait a bit until delete is really processed
-                //Not sure why, as promises are making sure commands are executed in the
-                //right order
-                .delay(1000)
-                .then(function(resp) {
-                    logger.info("Creating trigger " + item);
-                    manager.post({
-                            endpoint :  endpoint,
-                            headers : { "Content-Type" : util.getContentType("json") },
-                            body : settings
+                    manager.get({
+                            endpoint :  endpoint + '/' + settings['name'] + '/properties'
                     }).then(function(resp) {
+                        return new Promise(function(resolve, reject){
                             resp.result(
                                 function(response) {
-                                    if (response.statusCode === 201 || response.statusCode === 200) {
-                                        callBackwhenDone();
+                                    if (response.statusCode === 200) {
+                                        //Delete trigger
+                                        logger.info('Trigger ' + item + ' was already created. Deleting');
+                                        manager.remove({
+                                            endpoint :  endpoint + '/' + settings['name']
+                                        }).then(function(resp) {
+                                            resolve();
+                                        });
+                                    } else if (response.statusCode === 404) {
+                                        //There was no trigger with this name
+                                        resolve();
                                     } else {
-                                        logger.error(JSON.stringify(response.data));
-                                        reject('Error when deploying trigger at '+database+' [Error '+response.statusCode+']');
+                                        reject('Error while deleting trigger ' + item);
                                     }
                                 },
                                 function(error) {
-                                    reject('Error loading file ' + item);
+                                    reject('Error Cheking for ' + item);
                                     logger.error(error);
-                                });
+                                }
+                            );
+                        });
+                    })
+                    //Needs to wait a bit until delete is really processed
+                    //Not sure why, as promises are making sure commands are executed in the
+                    //right order
+                    .delay(1000)
+                    .then(function(resp) {
+                        logger.info("Creating trigger " + item);
+                        manager.post({
+                                endpoint :  endpoint,
+                                headers : { "Content-Type" : util.getContentType("json") },
+                                body : settings
+                        }).then(function(resp) {
+                                resp.result(
+                                    function(response) {
+                                        if (response.statusCode === 201 || response.statusCode === 200) {
+                                            callBackwhenDone();
+                                        } else {
+                                            logger.error(JSON.stringify(response.data));
+                                            reject('Error when deploying trigger at '+database+' [Error '+response.statusCode+']');
+                                        }
+                                    },
+                                    function(error) {
+                                        reject('Error loading file ' + item);
+                                        logger.error(error);
+                                    });
+                        });
                     });
                 });
             });
