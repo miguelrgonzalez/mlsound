@@ -53,33 +53,6 @@ DBManager.initializeRestAPI = function() {
 };
 
 
-var getContentType = function(file) {
-    var ext = file.split(".");
-    ext = ext[ext.length - 1];
-    switch(ext) {
-        case "sjs":
-            return "application/vnd.marklogic-javascript";
-            break;
-        case "json":
-            return "application/json";
-            break;
-        case "xqy":
-            return "application/xquery";
-            break;
-        case "xsl":
-            return "application/xslt+xml";
-            break;
-        case "xslt":
-            return "application/xslt+xml";
-            break;
-        case "xml":
-            return "application/xml";
-            break;
-        default:
-            return "application/vnd.marklogic-javascript";
-            break;
-    };
-};
 
 DBManager.deployRestObjects = function(folder, type, message, omitName) {
     var manager = this.getRestAPIManager();
@@ -118,7 +91,7 @@ DBManager.deployRestObjects = function(folder, type, message, omitName) {
 
                 manager.put({
                     endpoint :  endpoint,
-                    headers : { "Content-Type" : getContentType(file) },
+                    headers : { "Content-Type" : util.getContentType(file) },
                     body : document
                 }).then(function(req) {
                     req.result(
@@ -149,7 +122,7 @@ DBManager.deployTransformations = function(folder) {
 };
 
 DBManager.deployProperties = function(folder) {
-    return this.deployRestObjects(folder, "properties", "Properties", false);
+    return this.deployRestObjects(folder, "properties", "Properties", true);
 };
 
 DBManager.deployOptions = function(folder) {

@@ -2,10 +2,12 @@
 var Promise = require('bluebird');
 var common = require('../lib/common.js');
 var database = require('../lib/database.js');
+var fs = Promise.promisifyAll(require("fs"));
+var path = require("path");
 var program = require('commander');
+var prompt = Promise.promisifyAll(require('prompt'));
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
-var prompt = Promise.promisifyAll(require('prompt'));
 
 program
     .option('-e, --env [environment]', 'Environment', 'local')
@@ -25,9 +27,24 @@ var actions = {
     'code' : function() {
         logger.info('Deploying application code into ' + program.env);
         var settings = common.objectSettings('servers/http', program.env);
-        dbManager.loadDocuments('src/app', settings['modules-database'])
+        fs.readdirAsync('./src')
+        .map(function(file) {
+            return path.join('./src', file);
+        })
+        .filter(function(file) {
+            //Load everything except the rest api files
+            return file != "src/rest-api" && fs.statSync(file).isDirectory();
+        })
+        .then(function(dirs) {
+            //need to load all folders
+            folders = [];
+            dirs.forEach(function(folder) {
+                folders.push(dbManager.loadDocuments('src', folder, settings['modules-database']));
+            });
+            return Promise.all(folders);
+        })
         .then(function(msg) {
-            logger.info(msg.green);
+            logger.info("Code deployed".green);
             return dbManager.deployRestExtensions('src/rest-api/extensions', database);
         })
         .then(function(msg) {
@@ -44,6 +61,10 @@ var actions = {
         })
         .then(function(msg) {
             logger.info(msg.green);
+            return dbManager.deployTriggers(settings['content-database']);
+        })
+        .then(function(msg) {
+            logger.info(msg.green);
         })
         .catch(function(err){
             logger.error(err);
@@ -53,7 +74,7 @@ var actions = {
 
     'data' : function() {
         var settings = common.objectSettings('servers/http', program.env);
-        dbManager.loadDocuments('data', settings['content-database'])
+        dbManager.loadDocuments('data', 'data', settings['content-database'])
         .then(function(msg) {
             logger.info('Data ' +msg);
         }).catch(function(err){

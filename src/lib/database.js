@@ -72,15 +72,16 @@ DBManager.prototype.getConfigurationFiles = function(folder, failOnError) {
                 console.error(folder + ' Not found!!!! ');
                 process.exit(1);
             } else {
-                //return empty forest list
+                //return empty list
                 return [];
             }
         }
 };
 
-DBManager.prototype.getConfiguration = function(type) {
+DBManager.prototype.getConfiguration = function(type, failOnError) {
     if (!this.configuration[type]) {
-        var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/', true);
+        var baseDefs = this.getConfigurationFiles('./settings/base-configuration/' + type + '/',
+                                                  failOnError === undefined ? true : failOnError);
         var envDefs = this.getConfigurationFiles('./settings/' + this.env + '/' + type + '/', false);
 
         //merge lists and remove duplicates

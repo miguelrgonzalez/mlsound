@@ -60,7 +60,36 @@ var hostname = function(name) {
     }
 };
 
+var getContentType = function(file) {
+    var ext = file.split(".");
+    ext = ext[ext.length - 1];
+    switch(ext) {
+        case "sjs":
+            return "application/vnd.marklogic-javascript";
+            break;
+        case "json":
+            return "application/json";
+            break;
+        case "xqy":
+            return "application/xquery";
+            break;
+        case "xsl":
+            return "application/xslt+xml";
+            break;
+        case "xslt":
+            return "application/xslt+xml";
+            break;
+        case "xml":
+            return "application/xml";
+            break;
+        default:
+            return "application/vnd.marklogic-javascript";
+            break;
+    };
+};
+
 module.exports = {
     consoleLogger : consoleLogger,
-    hostname : hostname
+    hostname : hostname,
+    getContentType : getContentType
 };
