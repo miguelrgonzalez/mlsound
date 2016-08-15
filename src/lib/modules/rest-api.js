@@ -13,23 +13,24 @@ DBManager.initializeRestAPI = function() {
         //Check is REST API already exists
         manager.get({
             endpoint: '/LATEST/rest-apis/' + that.httpSettings['server-name']
-        }).
-        result(function(response) {
-            if (response.statusCode === 404) {
-                //Rest API not found
-                //create REST API instance
-                manager.post(
-                        {
-                            endpoint : '/LATEST/rest-apis',
-                            body : {
-                                'rest-api' : {
-                                                'name' : that.httpSettings['server-name'],
-                                                'port' : that.httpSettings.port,
-                                                'database' : that.httpSettings['content-database'],
-                                                'modules-database' : that.httpSettings['modules-database']
-                                             }
-                            }
-                        }).result(function(response) {
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 404) {
+                    //Rest API not found
+                    //create REST API instance
+                    manager.post(
+                            {
+                                endpoint : '/LATEST/rest-apis',
+                                body : {
+                                    'rest-api' : {
+                                                    'name' : that.httpSettings['server-name'],
+                                                    'port' : that.httpSettings.port,
+                                                    'database' : that.httpSettings['content-database'],
+                                                    'modules-database' : that.httpSettings['modules-database']
+                                                 }
+                                }
+                     }).then(function(resp) {
+                        resp.result(function(response) {
                             if (response.statusCode === 201) {
                                 resolve('Rest API Created');
                             } else {
@@ -37,14 +38,16 @@ DBManager.initializeRestAPI = function() {
                                 reject('Error when creating Rest API instance [Error '+response.statusCode+']');
                             }
                         });
-            } else if (response.statusCode === 200) {
-                //Rest API already exists
-                resolve('Rest API already exists');
-            } else {
-                logger.error(response.data);
-                reject('Something is not right  ['+response.statusCode+'] - ' + response.database);
-            }
+                    });
+                } else if (response.statusCode === 200) {
+                    //Rest API already exists
+                    resolve('Rest API already exists');
+                } else {
+                    logger.error(response.data);
+                    reject('Something is not right  ['+response.statusCode+'] - ' + response.database);
+                }
 
+            });
         });
     });
 };
@@ -117,20 +120,21 @@ DBManager.deployRestObjects = function(folder, type, message, omitName) {
                     endpoint :  endpoint,
                     headers : { "Content-Type" : getContentType(file) },
                     body : document
-                }).result(
-                    function(response) {
-                        if (response.statusCode === 201 || response.statusCode === 204) {
-                            callBackwhenDone();
-                        } else {
-                            logger.error(response.data.errorResponse.message);
+                }).then(function(req) {
+                    req.result(
+                        function(response) {
+                            if (response.statusCode === 201 || response.statusCode === 204) {
+                                callBackwhenDone();
+                            } else {
+                                logger.error(response.data.errorResponse.message);
+                                reject('Error loading ' + file);
+                            }
+                        },
+                        function(error) {
+                            logger.error(error);
                             reject('Error loading ' + file);
-                        }
-                    },
-                    function(error) {
-                        logger.error(error);
-                        reject('Error loading ' + file);
-                    }
-                );
+                        });
+                });
             });
         });
     });

@@ -17,14 +17,15 @@ DBManager.databaseOperation = function(operation, database) {
         manager.post({
             endpoint: '/manage/LATEST/databases/' + database,
             body: { 'operation' : operation }
-        }).
-        result(function(response) {
-            if (response.statusCode === 200) {
-                resolve(database);
-            } else {
-                logger.error(response.data);
-                reject('Error when issuing database operation '+operation+' at '+database+' [Error '+response.statusCode+']');
-            }
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 200) {
+                    resolve(database);
+                } else {
+                    logger.error(response.data);
+                    reject('Error when issuing database operation '+operation+' at '+database+' [Error '+response.statusCode+']');
+                }
+            });
         });
     });
 };
@@ -37,42 +38,47 @@ DBManager.buildDatabase = function(settings, type) {
         //Check if server exists
         manager.get({
             endpoint: UPDATE_SERVER_URL
-        }).
-        result(function(response) {
-            if (response.statusCode === 404) {
-                //database not found
-                //let's create it
-                logger.info('Creating ' + type +  ' database');
-                manager.post(
-                    {
-                        endpoint : BASE_SERVER_URL,
-                        body : settings
-                    }).result(function(response) {
-                            if (response.statusCode === 201) {
-                                resolve(type + " database created");
-                            } else {
-                                logger.error(response.data.errorResponse.message);
-                                reject('Error when creating '+type+' database [Error '+response.statusCode+']');
-                            }
-                    });
-            } else if (response.statusCode === 200) {
-                manager.put(
-                    {
-                        endpoint : UPDATE_SERVER_URL + '/properties',
-                        body : settings
-                    }).result(function(response) {
-                            if (response.statusCode !== 204) {
-                                logger.error(response.data);
-                                reject('Error when updating '+type+' database [Error '+response.statusCode+']');
-                            } else {
-                                resolve(type + " database updated");
-                            }
-                    });
-            } else {
-                logger.error(response.data);
-                reject('Error when checking '+type+' database [Error '+response.statusCode+']');
-            }
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 404) {
+                    //database not found
+                    //let's create it
+                    logger.info('Creating ' + type +  ' database');
+                    manager.post(
+                        {
+                            endpoint : BASE_SERVER_URL,
+                            body : settings
+                        }).then(function(resp) {
+                            resp.result(function(response) {
+                                if (response.statusCode === 201) {
+                                    resolve(type + " database created");
+                                } else {
+                                    logger.error(response.data.errorResponse.message);
+                                    reject('Error when creating '+type+' database [Error '+response.statusCode+']');
+                                }
+                            });
+                        });
+                } else if (response.statusCode === 200) {
+                    manager.put(
+                        {
+                            endpoint : UPDATE_SERVER_URL + '/properties',
+                            body : settings
+                        }).then(function(resp) {
+                            resp.result(function(response) {
+                                if (response.statusCode !== 204) {
+                                    logger.error(response.data);
+                                    reject('Error when updating '+type+' database [Error '+response.statusCode+']');
+                                } else {
+                                    resolve(type + " database updated");
+                                }
+                            });
+                        });
+                } else {
+                    logger.error(response.data);
+                    reject('Error when checking '+type+' database [Error '+response.statusCode+']');
+                }
 
+            });
         });
     });
 };
@@ -111,28 +117,30 @@ DBManager.removeDatabase = function(type, removeForest) {
     //Check if server exists
         manager.get({
             endpoint: SERVER_URL
-        }).
-        result(function(response) {
-            if (response.statusCode === 200) {
-                manager.remove(
-                    {
-                        endpoint : SERVER_URL,
-                        params : (removeForest ? { 'forest-delete' : removeForest } : undefined)
-                    }).result(function(response) {
-                            if (response.statusCode !== 204) {
-                                reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
-                                logger.error(response.data);
-                            }
-                            resolve(type + 'database removed');
-                    });
-            } else if (response.statusCode === 404) {
-                //database already removed
-                resolve('Database already removed');
-            } else {
-                reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
-                logger.error(response.data);
-            }
-
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 200) {
+                    manager.remove(
+                        {
+                            endpoint : SERVER_URL,
+                            params : (removeForest ? { 'forest-delete' : removeForest } : undefined)
+                        }).then(function(resp) {
+                            resp.result(function(response) {
+                                if (response.statusCode !== 204) {
+                                    reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
+                                    logger.error(response.data);
+                                }
+                                resolve(type + 'database removed');
+                            });
+                        });
+                } else if (response.statusCode === 404) {
+                    //database already removed
+                    resolve('Database already removed');
+                } else {
+                    reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
+                    logger.error(response.data);
+                }
+            });
         });
     });
 };

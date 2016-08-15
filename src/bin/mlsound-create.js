@@ -63,26 +63,6 @@ var addFileHeader = function(file, header) {
     });
 };
 
-var hostname = function(name) {
-    //ipv4 and ipv6
-    var ipRegex = /((^\s*((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]))\s*$)|(^\s*((([0-9A-Fa-f]{1,4}:){7}([0-9A-Fa-f]{1,4}|:))|(([0-9A-Fa-f]{1,4}:){6}(:[0-9A-Fa-f]{1,4}|((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){5}(((:[0-9A-Fa-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3})|:))|(([0-9A-Fa-f]{1,4}:){4}(((:[0-9A-Fa-f]{1,4}){1,3})|((:[0-9A-Fa-f]{1,4})?:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){3}(((:[0-9A-Fa-f]{1,4}){1,4})|((:[0-9A-Fa-f]{1,4}){0,2}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){2}(((:[0-9A-Fa-f]{1,4}){1,5})|((:[0-9A-Fa-f]{1,4}){0,3}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(([0-9A-Fa-f]{1,4}:){1}(((:[0-9A-Fa-f]{1,4}){1,6})|((:[0-9A-Fa-f]{1,4}){0,4}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:))|(:(((:[0-9A-Fa-f]{1,4}){1,7})|((:[0-9A-Fa-f]{1,4}){0,5}:((25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}))|:)))(%.+)?\s*$))/;
-    //ip
-    if (ipRegex.test(name)) {
-        logger.info('Reverse lookup on: ' + name);
-        return dns.lookupServiceAsync(name, 8001);
-    //localhost
-    } if (/^localhost$/i.test(name)) {
-        logger.info('Reverse lookup on: ' + name);
-        return dns.lookupAsync(name).
-               then(function(ip) {
-                   //this should be always 127.0.0.1
-                   return dns.lookupServiceAsync(ip, 8001);
-               });
-    //name
-    } else {
-        return Promise.try(function() { return name.trim() });
-    }
-};
 
 //copy default configuration files
 ncp.ncp.limit = 16;
@@ -181,27 +161,23 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                         '//for a complete list of possible parameters\n');
 
                 changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.password', result.password);
-                //MarkLogic refers to machines via hostnames
-                hostname(result.host)
-                .then(function(hostname) {
-                    //write file back
-                    if(name != null && name.trim() != "") {
-                        changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),  'host', hostname);
+                //write file back
+                if(name != null && name.trim() != "") {
+                    changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),  'host', result.host);
 
-                        changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'), 'host', hostname);
+                    changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'), 'host', result.host);
 
-                        changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'), 'host-name', hostname);
-                        changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.host', hostname);
-                    } else {
-                        logger.error("Error while determining hostname");
-                    }
+                    changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'), 'host-name', result.host);
+                    changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.host', result.host);
+                } else {
+                    logger.error("Error while determining hostname");
+                }
 
-                    addFileHeader(path.join(name, 'settings/base-configuration/connection.json'), '//Management API connection details\n');
+                addFileHeader(path.join(name, 'settings/base-configuration/connection.json'), '//Management API connection details\n');
 
 
-                    logger.warning('Project created!');
-                    logger.info('Review project/connection settings and adjust as required');
-                })
+                logger.warning('Project created!');
+                logger.info('Review project/connection settings and adjust as required');
                .catch(function(err){
                    if(err!=null) logger.error(err);
                });

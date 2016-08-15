@@ -1,6 +1,8 @@
 var Operation = require('marklogic/lib/operation.js');
+var Promise = require('bluebird');
 var fs = require('fs');
 var mlutil = require('marklogic/lib/mlutil.js');
+var util = require('./utils.js');
 var path = require('path');
 var requester = require('marklogic/lib/requester.js');
 var valcheck = require('core-util-is');
@@ -84,7 +86,7 @@ var Manager = function(adminClient) {
     this.client = adminClient;
 };
 
-Manager.prototype.get = function(paramsObj) {
+Manager.prototype.get = Promise.coroutine(function* (paramsObj) {
   var endpoint    = paramsObj.endpoint;
   var params      = paramsObj.params;
   var headers     = paramsObj.headers;
@@ -99,6 +101,9 @@ Manager.prototype.get = function(paramsObj) {
     } : headers;
   requestOptions.path = path;
 
+  var host = yield util.hostname(requestOptions.host);
+  requestOptions.host = host;
+
   var operation = new Operation(
       'GET '+path, this.client, requestOptions, 'empty',
       ((hasResponse === 'false') ? 'empty' : 'single')
@@ -107,9 +112,9 @@ Manager.prototype.get = function(paramsObj) {
   operation.outputTransform  = responseOutputTransform;
 
   return requester.startRequest(operation);
-};
+});
 
-Manager.prototype.post = function(paramsObj) {
+Manager.prototype.post = Promise.coroutine(function* (paramsObj) {
   var endpoint    = paramsObj.endpoint;
   var params      = paramsObj.params;
   var headers     = paramsObj.headers;
@@ -128,6 +133,9 @@ Manager.prototype.post = function(paramsObj) {
 
   var hasBody = !valcheck.isNullOrUndefined(body);
 
+  var host = yield util.hostname(requestOptions.host);
+  requestOptions.host = host;
+
   var operation = new Operation(
       'POST '+path,
       this.client,
@@ -143,9 +151,9 @@ Manager.prototype.post = function(paramsObj) {
   }
 
   return requester.startRequest(operation);
-};
+});
 
-Manager.prototype.put = function(paramsObj) {
+Manager.prototype.put = Promise.coroutine(function* (paramsObj) {
   var endpoint    = paramsObj.endpoint;
   var params      = paramsObj.params;
   var headers     = paramsObj.headers;
@@ -163,6 +171,9 @@ Manager.prototype.put = function(paramsObj) {
 
   var hasBody = !valcheck.isNullOrUndefined(body);
 
+  var host = yield util.hostname(requestOptions.host);
+  requestOptions.host = host;
+
   var operation = new Operation(
       'PUT '+path,
       this.client,
@@ -176,11 +187,10 @@ Manager.prototype.put = function(paramsObj) {
   if (hasBody) {
     operation.requestBody = body;
   }
-
   return requester.startRequest(operation);
-};
+});
 
-Manager.prototype.remove = function(paramsObj) {
+Manager.prototype.remove = Promise.coroutine(function* (paramsObj) {
   var endpoint    = paramsObj.endpoint;
   var params      = paramsObj.params;
   var headers     = paramsObj.headers;
@@ -195,6 +205,9 @@ Manager.prototype.remove = function(paramsObj) {
     } : headers;
   requestOptions.path = path;
 
+  var host = yield util.hostname(requestOptions.host);
+  requestOptions.host = host;
+
   var operation = new Operation(
       'DELETE '+path,
       this.client,
@@ -205,7 +218,7 @@ Manager.prototype.remove = function(paramsObj) {
   operation.outputTransform  = responseOutputTransform;
 
   return requester.startRequest(operation);
-};
+});
 
 var makePath = function(endpoint, params) {
   var path = encodeURI(endpoint);

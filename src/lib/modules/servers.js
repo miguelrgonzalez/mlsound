@@ -13,18 +13,19 @@ DBManager.restartGroup = function() {
         manager.post({
             endpoint: '/manage/LATEST/groups/' + that.httpSettings['group-name'],
             body: { 'operation' : 'restart-group'}
-        }).
-        result(function(response) {
-            if (response.statusCode === 202) {
-                resolve("Group Restarted");
-            }
-            else {
-                logger.error(response.data);
-                reject('Error when restarting server group '+that.httpSettings['group-name']+' [Error '+response.statusCode+']');
-                //logger.error('Error when restarting server group %s [Error %s]',
-                    //that.httpSettings['group-name'], response.statusCode);
-                //process.exit(1);
-            }
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 202) {
+                    resolve("Group Restarted");
+                }
+                else {
+                    logger.error(response.data);
+                    reject('Error when restarting server group '+that.httpSettings['group-name']+' [Error '+response.statusCode+']');
+                    //logger.error('Error when restarting server group %s [Error %s]',
+                        //that.httpSettings['group-name'], response.statusCode);
+                    //process.exit(1);
+                }
+            });
         });
     });
 };
@@ -71,28 +72,31 @@ DBManager.updateServer = function(type) {
         manager.get({
             endpoint: UPDATE_SERVER_URL,
             params : { 'group-id' : settings['group-name'] }
-        }).
-        result(function(response) {
-            if (response.statusCode === 200) {
-                manager.put(
-                    {
-                        endpoint : UPDATE_SERVER_URL + '/properties',
-                        body : settings,
-                        params : { 'group-id' : settings['group-name'] }
-                    }).result(function(response) {
-                            if (response.statusCode === 202) {
-                                resolve('Rest API instance updated');
-                                //logger.info('Rest API instance updated');
-                            } else if (response.statusCode === 204) {
-                                resolve('Server restart needed!');
-                            } else {
-                                logger.error(response.data);
-                                reject('Error when updating Rest API instance [Error '+response.statusCode+']');
-                                //logger.error('Error when updating Rest API instance [Error %s]', response.statusCode);
-                                //process.exit(1);
-                            }
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 200) {
+                    manager.put(
+                        {
+                            endpoint : UPDATE_SERVER_URL + '/properties',
+                            body : settings,
+                            params : { 'group-id' : settings['group-name'] }
+                    }).then(function(resp){
+                        resp.result(function(response) {
+                                if (response.statusCode === 202) {
+                                    resolve('Rest API instance updated');
+                                    //logger.info('Rest API instance updated');
+                                } else if (response.statusCode === 204) {
+                                    resolve('Server restart needed!');
+                                } else {
+                                    logger.error(response.data);
+                                    reject('Error when updating Rest API instance [Error '+response.statusCode+']');
+                                    //logger.error('Error when updating Rest API instance [Error %s]', response.statusCode);
+                                    //process.exit(1);
+                                }
+                        });
                     });
-            }
+                }
+            });
         });
     });
 };
@@ -109,32 +113,35 @@ DBManager.removeServer = function(type) {
         manager.get({
             endpoint: SERVER_URL,
             params : { 'group-id' : settings['group-name'] }
-        }).
-        result(function(response) {
-            if (response.statusCode === 200) {
-                manager.remove(
-                    {
-                        endpoint : SERVER_URL,
-                        params : { 'group-id' : settings['group-name'] }
-                    }).result(function(response) {
-                            if (response.statusCode === 202) {
-                                retMsg = 'HTTP server removed';
-                            } else if (response.statusCode === 204) {
-                                retMsg = 'Server restart needed!';
-                            } else {
-                                reject('Error when trying to remove app server ' +that.httpSettings['server-name']+' [Error '+response.statusCode+']');
-                                // logger.error('Error when trying to remove app server %s [Error %s]',
-                                //     that.httpSettings['server-name'], response.statusCode);
-                                logger.error(response.data);
-                                //process.exit(1);
-                            }
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 200) {
+                    manager.remove(
+                        {
+                            endpoint : SERVER_URL,
+                            params : { 'group-id' : settings['group-name'] }
+                        }).then(function(resp) {
+                            resp.result(function(response) {
+                                if (response.statusCode === 202) {
+                                    retMsg = 'HTTP server removed';
+                                } else if (response.statusCode === 204) {
+                                    retMsg = 'Server restart needed!';
+                                } else {
+                                    reject('Error when trying to remove app server ' +that.httpSettings['server-name']+' [Error '+response.statusCode+']');
+                                    // logger.error('Error when trying to remove app server %s [Error %s]',
+                                    //     that.httpSettings['server-name'], response.statusCode);
+                                    logger.error(response.data);
+                                    //process.exit(1);
+                                }
 
-                            resolve(retMsg);
-                    });
-            } else if (response.statusCode === 404) {
-                //No need to remove anything. Just finished
-                resolve(retMsg);
-            }
+                                resolve(retMsg);
+                            });
+                        });
+                } else if (response.statusCode === 404) {
+                    //No need to remove anything. Just finished
+                    resolve(retMsg);
+                }
+            });
         });
     });
 };
@@ -175,35 +182,37 @@ DBManager.buildForestsByHost = function(dbSettings) {
             forestNames.push(forest['forest-name']);
             manager.get({
                 endpoint: '/manage/LATEST/forests/' + forest['forest-name']
-            })
-            .result(function(response) {
-                if (response.statusCode === 404) {
-                    // forest does not already exist; create it
-                    logger.debug('creating forest ' + forest['forest-name']);
-                    manager.post({
-                        endpoint : '/manage/LATEST/forests',
-                        body : forest
-                    })
-                    .result(function(response) {
-                        if (response.statusCode === 201) {
-                            // yay. We're done with this one.
-                            callBackwhenDone();
-                        } else {
-                            console.error(response.data);
-                            reject('Error when creating '+forest+' [Error '+response.statusCode+']');
-                            //logger.error('Error when creating %s [Error %s]', forest, response.statusCode);
-                            //process.exit(1);
-                        }
-                   });
-                } else if (response.statusCode === 200) {
-                    // Already exists, no need to create
-                    callBackwhenDone();
-                } else {
-                    //logger.error('Error when checking %s [Error %s]', forest, response.statusCode);
-                    console.error(response.data);
-                    reject('Error when checking '+forest+' [Error '+response.statusCode+']');
-                    //process.exit(1);
-                }
+            }).then(function(resp) {
+                resp.result(function(response) {
+                    if (response.statusCode === 404) {
+                        // forest does not already exist; create it
+                        logger.debug('creating forest ' + forest['forest-name']);
+                        manager.post({
+                            endpoint : '/manage/LATEST/forests',
+                            body : forest
+                        }).then(function(resp) {
+                            resp.result(function(response) {
+                                if (response.statusCode === 201) {
+                                    // yay. We're done with this one.
+                                    callBackwhenDone();
+                                } else {
+                                    console.error(response.data);
+                                    reject('Error when creating '+forest+' [Error '+response.statusCode+']');
+                                    //logger.error('Error when creating %s [Error %s]', forest, response.statusCode);
+                                    //process.exit(1);
+                                }
+                           });
+                        });
+                    } else if (response.statusCode === 200) {
+                        // Already exists, no need to create
+                        callBackwhenDone();
+                    } else {
+                        //logger.error('Error when checking %s [Error %s]', forest, response.statusCode);
+                        console.error(response.data);
+                        reject('Error when checking '+forest+' [Error '+response.statusCode+']');
+                        //process.exit(1);
+                    }
+                });
             });
         });
     });
@@ -227,35 +236,37 @@ DBManager.removeForests = function(type, level) {
     // Ask for the database properties to get the list of forests
         manager.get({
             endpoint: dbPropsURL
-        }).
-        result(function(response) {
-            if (response.statusCode === 200) {
-                var forests = response.data.forest;
-                if (forests) {
-                    forests.forEach(function(forest) {
-                        //logger.debug('detaching forest ' + forest);
-                        manager.post({
-                            endpoint: '/manage/LATEST/forests/' + forest,
-                            headers: {
-                                'Content-Type': 'application/x-www-form-urlencoded'
-                            },
-                            body: 'state=detach'
-                        })
-                        .result(function(response) {
-                            //logger.debug('deleting forest ' + forest);
-                            manager.remove({
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 200) {
+                    var forests = response.data.forest;
+                    if (forests) {
+                        forests.forEach(function(forest) {
+                            //logger.debug('detaching forest ' + forest);
+                            manager.post({
                                 endpoint: '/manage/LATEST/forests/' + forest,
-                                params: {
-                                    level: level
-                                }
+                                headers: {
+                                    'Content-Type': 'application/x-www-form-urlencoded'
+                                },
+                                body: 'state=detach'
+                            }).then(function(resp) {
+                                resp.result(function(response) {
+                                    //logger.debug('deleting forest ' + forest);
+                                    manager.remove({
+                                        endpoint: '/manage/LATEST/forests/' + forest,
+                                        params: {
+                                            level: level
+                                        }
+                                    });
+                                });
                             });
                         });
-                    });
+                    }
+                } else if (response.statusCode === 404) {
+                    logger.warning('Database does not exist; skipping db removal');
                 }
-            } else if (response.statusCode === 404) {
-                logger.warning('Database does not exist; skipping db removal');
-            }
-            resolve(type + ' forests removed');
+                resolve(type + ' forests removed');
+            });
         });
     });
 

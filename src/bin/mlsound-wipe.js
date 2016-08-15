@@ -58,14 +58,14 @@ prompt.get({
                             dbManager.removeDatabase('content', undefined),
                             dbManager.removeDatabase('modules', undefined),
                             dbManager.removeUsers(),
-                            dbManager.removeRoles(), 
+                            dbManager.removeRoles(),
                             function(contentForests, modulesForests, contentDb, modulesDb, users, roles){
-                                logger.info(contentForests);
-                                logger.info(modulesForests);
-                                logger.info(contentDb);
-                                logger.info(modulesDb);
-                                logger.info(users);
-                                logger.info(roles);
+                                logger.info(contentForests.green);
+                                logger.info(modulesForests.green);
+                                logger.info(contentDb.green);
+                                logger.info(modulesDb.green);
+                                logger.info(users.green);
+                                logger.info(roles.green);
                             })
                         .done(function(){
                             logger.info('Project wiped!');
