@@ -5,5 +5,13 @@
         "user":     "admin",
         "password": "admin",
         "authType": "digest"
+    },
+
+    //You can define value placeholders here
+    "global-values" : {
+        "%%HOSTNAME%%" : "localhost",
+        "%%APP-NAME%%" : "Triggers",
+        "%%TRIGGERS-DATABASE%%" : "Triggers",
+        "%%SCHEMAS-DATABASE%%" : "Schemas"
     }
 }

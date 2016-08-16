@@ -1,4 +1,4 @@
 {
-    "host-name" : "localhost",
+    "host-name" : "%%HOSTNAME%%",
     "group" : "Default"
 }

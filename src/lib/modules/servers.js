@@ -198,8 +198,6 @@ DBManager.buildForestsByHost = function(dbSettings) {
                                 } else {
                                     console.error(response.data);
                                     reject('Error when creating '+forest+' [Error '+response.statusCode+']');
-                                    //logger.error('Error when creating %s [Error %s]', forest, response.statusCode);
-                                    //process.exit(1);
                                 }
                            });
                         });
@@ -207,10 +205,8 @@ DBManager.buildForestsByHost = function(dbSettings) {
                         // Already exists, no need to create
                         callBackwhenDone();
                     } else {
-                        //logger.error('Error when checking %s [Error %s]', forest, response.statusCode);
                         console.error(response.data);
                         reject('Error when checking '+forest+' [Error '+response.statusCode+']');
-                        //process.exit(1);
                     }
                 });
             });
@@ -221,13 +217,10 @@ DBManager.buildForestsByHost = function(dbSettings) {
 
 DBManager.removeForests = function(type, level) {
     var that = this;
-    //logger.info('Removing ' + type + ' forests');
     return new Promise(function(resolve, reject){
         //check level value
         if (level && !/(full|config-only)/i.test(level)) {
             reject('Only full and config-only allowed for level parameter');
-            //logger.error('Only full and config-only allowed for level parameter');
-            //process.exit(1);
         }
         var manager = that.getHttpManager();
         var settings = common.objectSettings('databases/' + type, that.env);
@@ -240,7 +233,6 @@ DBManager.removeForests = function(type, level) {
                 var forests = properties.forest;
                 if (forests) {
                     forests.forEach(function(forest) {
-                        //logger.debug('detaching forest ' + forest);
                         manager.post({
                             endpoint: '/manage/LATEST/forests/' + forest,
                             headers: {
@@ -249,7 +241,6 @@ DBManager.removeForests = function(type, level) {
                             body: 'state=detach'
                         }).then(function(resp) {
                             resp.result(function(response) {
-                                //logger.debug('deleting forest ' + forest);
                                 manager.remove({
                                     endpoint: '/manage/LATEST/forests/' + forest,
                                     params: {

@@ -1,6 +1,6 @@
 {
-    "user-name" : "username",
+    "user-name" : "%%APP-NAME%%-application-user",
+    "description" : "%%APP-NAME%% application user",
     "password" : "change-me!!",
-    "description" : "description",
-    "role" : ["role-name"]
+    "role" : ["%%APP-NAME%%-application-role"]
 }

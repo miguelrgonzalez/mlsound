@@ -10,6 +10,7 @@
 
     //You can define value placeholders here
     "global-values" : {
+        "%%HOSTNAME%%" : "localhost",
         "%%TRIGGERS-DATABASE%%" : "Triggers"
     }
 }

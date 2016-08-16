@@ -8,6 +8,7 @@ console.log(('mlsound version ' + packjson.version).green);
 program
     .version(packjson.version)
     .command('create [name]', 'Create project folder and scaffolding files')
+    .command('add [module]', 'Add configuration files for [cpf|triggers|mimetypes]')
     .command('bootstrap', 'Bootstrap project')
     .command('wipe', 'Wipe project')
     .command('deploy [module]', 'Deploy [code|data|schemas|triggers]')

@@ -1,0 +1,20 @@
+{
+  "name": "tst-trigger",
+  "description": "my trigger",
+  "event": {
+    "data-event": {
+      "collection-scope": {
+        "uri": "sample"
+      },
+      "document-content": {
+        "update-kind": "create"
+      },
+      "when": "post-commit"
+    }
+  },
+  "module": "/app/triggers/sample-trigger.xqy",
+  "module-db": "test-project-modules",
+  "module-root": "/",
+  "enabled": true,
+  "recursive": true
+}

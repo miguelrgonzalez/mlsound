@@ -31,9 +31,7 @@ logger.info('Creating project ' + name);
 ]).forEach(
         function (folder) {
             mkdirp.mkdirpAsync(path.join(name, folder)).then(function(folder, err) {
-                if(folder){
-                    logger.info(folder + ' Created'.green);
-                } else {
+                if(!folder){
                     logger.warning('Project folder already exists.');
                 }
             }).catch(function(err){
@@ -54,15 +52,6 @@ var changePropertyValue = function(file, property, value) {
     fs.writeFileSync(file ,JSON.stringify(settings, null, 4), 'utf8');
 };
 
-var addFileHeader = function(file, header) {
-    fs.readFileAsync(file, 'utf8').then(function(fileContent){
-        fs.writeFileAsync(file, header + '\n' + fileContent, 'utf8').done(function(){
-        });
-    }).catch(function(err){
-        logger.error(err);
-    });
-};
-
 
 //copy default configuration files
 ncp.ncp.limit = 16;
@@ -72,39 +61,8 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
         //don't overwrite destination files if they do exist
         clobber : false
     }).then(function(){
-
         //Change project name dependant properties
-        //Not efficient, but readable and easy to maintain
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/servers/http.json'), 'server-name', name);
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/servers/http.json'), 'modules-database', name + '-modules');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/servers/http.json'),  'content-database', name + '-content');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/servers/http.json'), 'default-user', name + '-application-user');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/databases/content.json'), 'database-name', name + '-content');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/databases/content.json'), 'forest', [name + '-content-01']);
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/databases/modules.json'), 'database-name', name + '-modules');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/databases/modules.json'), 'forest', [name + '-modules-01']);
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/forests/content-01.json'), 'forest-name', name + '-content-01');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/forests/modules-01.json'), 'forest-name', name + '-modules-01');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/security/roles/role-01.json'), 'role-name', name + '-application-role');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/security/roles/role-01.json'),  'description', name  + ' application role');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/security/users/user-01.json'), 'user-name', name + '-application-user');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/security/users/user-01.json'),  'description', name + ' application user');
-
-        changePropertyValue(path.join(name, 'settings/base-configuration/security/users/user-01.json'), 'role', [name + '-application-role']);
+        changePropertyValue(path.join(name, 'settings/base-configuration/connection.json'), 'global-values.%%APP-NAME%%', name);
 
         logger.warning('Please enter below the '.white +
                     'MarkLogic'.red +
@@ -131,57 +89,20 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
                 }
             }
         }).then(function(result, err) {
-                //Adding file headers
-                addFileHeader(path.join(name, 'settings/base-configuration/databases/content.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/databases/[id-or-name]/properties\n' +
-                        '//for a complete list of possible parameters\n');
-
-                addFileHeader(path.join(name, 'settings/base-configuration/databases/modules.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/databases/[id-or-name]/properties\n' +
-                        '//for a complete list of possible parameters\n');
-
-                addFileHeader(path.join(name, 'settings/base-configuration/servers/http.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/servers/[id-or-name]/properties\n' +
-                        '//for a complete list of possible parameters\n');
-
-                addFileHeader(path.join(name, 'settings/base-configuration/security/roles/role-01.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/roles/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n');
-
-                addFileHeader(path.join(name, 'settings/base-configuration/security/users/user-01.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/users/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n');
-
-                addFileHeader(path.join(name, 'settings/base-configuration/forests/content-01.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/forests/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n');
-
-                addFileHeader(path.join(name, 'settings/base-configuration/forests/modules-01.json'),
-                        '//See http://docs.marklogic.com/REST/PUT/manage/v2/forests/[id-or-name]/properties\n'+
-                        '//for a complete list of possible parameters\n');
-
                 changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.password', result.password);
                 //write file back
                 if(name != null && name.trim() != "") {
-                    changePropertyValue(path.join(name, 'settings/environments/local/forests/content-01.json'),  'host', result.host);
+                    changePropertyValue(path.join(name, 'settings/base-configuration/connection.json'), 'connection.host', result.host);
+                    changePropertyValue(path.join(name, 'settings/base-configuration/connection.json'), 'global-values.%%HOSTNAME%%', result.host);
 
-                    changePropertyValue(path.join(name, 'settings/environments/local/forests/modules-01.json'), 'host', result.host);
-
-                    changePropertyValue(path.join(name, 'settings/environments/local/hosts/host-01.json'), 'host-name', result.host);
                     changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'connection.host', result.host);
+                    changePropertyValue(path.join(name, 'settings/environments/local/connection.json'), 'global-values.%%HOSTNAME%%', result.host);
                 } else {
                     logger.error("Error while determining hostname");
                 }
 
-                addFileHeader(path.join(name, 'settings/base-configuration/connection.json'), '//Management API connection details\n');
-
-
                 logger.warning('Project created!');
                 logger.info('Review project/connection settings and adjust as required');
-               .catch(function(err){
-                   if(err!=null) logger.error(err);
-               });
-
         });
     })
     .catch(function(err){

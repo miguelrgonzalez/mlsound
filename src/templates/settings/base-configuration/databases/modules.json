@@ -1,7 +1,7 @@
 {
-    "database-name" : "modules-database-name",
+    "database-name" : "%%APP-NAME%%-modules",
 
-    "forest" : [ "forest-name" ],
+    "forest" : [ "%%APP-NAME%%-modules-01" ],
 
     "stemmed-searches" : "off",
     "word-searches" : false,

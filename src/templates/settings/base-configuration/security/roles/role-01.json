@@ -1,6 +1,6 @@
 {
-    "role-name" : "role-name",
-    "description" : "role description",
+    "role-name" : "%%APP-NAME%%-application-role",
+    "description" : "%%APP-NAME%% application role",
     "role" : [
         "rest-reader",
         "rest-writer"

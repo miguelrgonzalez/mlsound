@@ -1,4 +1,4 @@
 {
-    "forest-name" : "forest-name",
-    "host" : "localhost"
+    "forest-name" : "%%APP-NAME%%-content-01",
+    "host" : "%%HOSTNAME%%"
 }

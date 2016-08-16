@@ -1,8 +1,9 @@
 {
-    "server-name" : "http-server-name",
+    "server-name" : "%%APP-NAME%%",
     "group-name" : "Default",
     "root" : "\/",
-    "modules-database" : "Modules",
-    "content-database" : "Documents",
+    "modules-database" : "%%APP-NAME%%-modules",
+    "content-database" : "%%APP-NAME%%-content",
+    "default-user" : "%%APP-NAME%%-application-user",
     "port" : 8003
 }

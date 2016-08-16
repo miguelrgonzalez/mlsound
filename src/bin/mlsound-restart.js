@@ -5,18 +5,6 @@ var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
 var prompt = require('prompt');
 
-var databaseClient = function() {
-    var client = null;
-    return function() {
-        if (client) {
-            return client;
-        } else {
-            client = marklogic.createDatabaseClient(SETTINGS.connection);
-            return client;
-        }
-    }();
-};
-
 //Handle execution
 program
     .option('-e, --env [environment]', 'Environment', 'local')

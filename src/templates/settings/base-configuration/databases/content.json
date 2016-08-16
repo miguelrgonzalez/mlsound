@@ -1,7 +1,7 @@
 {
-    "database-name" : "database-name",
-    "schema-database" : "Schemas",
+    "database-name" : "%%APP-NAME%%-content",
+    "schema-database" : "%%SCHEMAS-DATABASE%%",
     "triggers-database" : "%%TRIGGERS-DATABASE%%",
     "triple-index" : "false",
-    "forest" : [ "forest-name" ]
+    "forest" : [ "%%APP-NAME%%-content-01" ]
 }

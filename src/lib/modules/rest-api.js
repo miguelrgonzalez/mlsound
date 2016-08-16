@@ -34,7 +34,7 @@ DBManager.initializeRestAPI = function() {
                             if (response.statusCode === 201) {
                                 resolve('Rest API Created');
                             } else {
-                                logger.error(response.data);
+                                logger.error(JSON.stringify(response.data));
                                 reject('Error when creating Rest API instance [Error '+response.statusCode+']');
                             }
                         });
@@ -43,7 +43,7 @@ DBManager.initializeRestAPI = function() {
                     //Rest API already exists
                     resolve('Rest API already exists');
                 } else {
-                    logger.error(response.data);
+                    logger.error(JSON.stringify(response.data));
                     reject('Something is not right  ['+response.statusCode+'] - ' + response.database);
                 }
 

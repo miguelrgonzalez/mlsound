@@ -23,6 +23,7 @@ mlsound version 0.0.1
   Commands:
 
     create [name]    Create project folder and scaffolding files
+    add [module]     Add configuration files for [cpf|triggers|mimetypes]
     bootstrap        Bootstrap project
     wipe             Wipe project
     deploy [module]  Deploy [code|data|schemas]
