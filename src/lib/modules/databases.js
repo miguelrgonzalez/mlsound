@@ -40,6 +40,8 @@ DBManager.getDatabaseProperties = function(database) {
             resp.result(function(response) {
                 if (response.statusCode === 200) {
                     resolve(response.data);
+                } else if (response.statusCode === 404) {
+                    resolve();
                 } else {
                     logger.error(response.data);
                     reject('Error when fetching database properties at '+database+' [Error '+response.statusCode+']');
@@ -133,7 +135,7 @@ DBManager.removeDatabase = function(type, removeForest) {
         var settings = common.objectSettings('databases/' + type, that.env);
         var SERVER_URL = '/manage/LATEST/databases/' + settings['database-name'];
         var manager = that.getHttpManager();
-    //Check if server exists
+        //Check if server exists
         manager.get({
             endpoint: SERVER_URL
         }).then(function(resp) {
@@ -149,7 +151,7 @@ DBManager.removeDatabase = function(type, removeForest) {
                                     reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
                                     logger.error(response.data);
                                 }
-                                resolve(type + 'database removed');
+                                resolve(type + ' database removed');
                             });
                         });
                 } else if (response.statusCode === 404) {

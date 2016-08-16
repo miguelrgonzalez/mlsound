@@ -63,6 +63,9 @@ prompt.get(
         return dbManager.initializeRestAPI();
     }).then(function(msg) {
         logger.info(msg.green);
+        return dbManager.deployMimetypes();
+    }).then(function(msg) {
+        logger.info(msg.green);
         //update http server settings
         dbManager.updateServer('http').done(function() {
             prompt.message = 'mlsound'.green;

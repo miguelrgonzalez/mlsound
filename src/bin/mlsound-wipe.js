@@ -44,7 +44,7 @@ prompt.get({
                 }
             },
             function(err, result) {
-            dbManager.settings.connection.password = result.password;
+                dbManager.settings.connection.password = result.password;
                 dbManager.removeServer('http').then(function(msg) {
                     logger.info(msg);
                     //wait 3 seconds before trying to do anything else

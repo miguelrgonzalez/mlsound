@@ -1,0 +1,9 @@
+{
+    "name": "image/jpeg",
+    "extension": [
+      "jpeg",
+      "jpg",
+      "jpe"
+    ],
+    "format": "binary"
+}

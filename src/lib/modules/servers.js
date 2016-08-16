@@ -233,42 +233,114 @@ DBManager.removeForests = function(type, level) {
         var settings = common.objectSettings('databases/' + type, that.env);
         var dbName = settings['database-name'];
         var dbPropsURL = '/manage/LATEST/databases/' + dbName + '/properties';
-    // Ask for the database properties to get the list of forests
-        manager.get({
-            endpoint: dbPropsURL
-        }).then(function(resp) {
-            resp.result(function(response) {
-                if (response.statusCode === 200) {
-                    var forests = response.data.forest;
-                    if (forests) {
-                        forests.forEach(function(forest) {
-                            //logger.debug('detaching forest ' + forest);
-                            manager.post({
-                                endpoint: '/manage/LATEST/forests/' + forest,
-                                headers: {
-                                    'Content-Type': 'application/x-www-form-urlencoded'
-                                },
-                                body: 'state=detach'
-                            }).then(function(resp) {
-                                resp.result(function(response) {
-                                    //logger.debug('deleting forest ' + forest);
-                                    manager.remove({
-                                        endpoint: '/manage/LATEST/forests/' + forest,
-                                        params: {
-                                            level: level
-                                        }
-                                    });
+        // Ask for the database properties to get the list of forests
+        that.getDatabaseProperties(dbName)
+        .then(function(properties) {
+            if (properties) {
+                var forests = properties.forest;
+                if (forests) {
+                    forests.forEach(function(forest) {
+                        //logger.debug('detaching forest ' + forest);
+                        manager.post({
+                            endpoint: '/manage/LATEST/forests/' + forest,
+                            headers: {
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            },
+                            body: 'state=detach'
+                        }).then(function(resp) {
+                            resp.result(function(response) {
+                                //logger.debug('deleting forest ' + forest);
+                                manager.remove({
+                                    endpoint: '/manage/LATEST/forests/' + forest,
+                                    params: {
+                                        level: level
+                                    }
                                 });
                             });
                         });
-                    }
-                } else if (response.statusCode === 404) {
-                    logger.warning('Database does not exist; skipping db removal');
+                    });
                 }
-                resolve(type + ' forests removed');
-            });
-        });
+            } else {
+                logger.warning('Database does not exist; skipping db removal');
+            }
+            resolve(type + ' forests removed');
+       });
     });
 
 };
 
+DBManager.deployMimetypes = function(database) {
+    var that = this;
+    var manager = this.getHttpManager();
+    var defs = this.getConfiguration("mimetypes", false);
+
+    return new Promise(function(resolve, reject){
+            var callBackwhenDone = (function() {
+                var total = defs.length;
+                return function() {
+                    total = total-1;
+                    if (total < 1 ){
+                        resolve('Mimetypes deployed');
+                    }
+                };
+            })();
+
+            if (defs.length === 0) {
+                resolve('Nothing to do');
+            }
+
+            defs.forEach(function(item){
+                var settings = common.objectSettings('mimetypes/' + item, that.env);
+                var endpoint = '/manage/LATEST/mimetypes/';
+
+                manager.get({
+                        endpoint :  endpoint + '/' + item
+                }).then(function(resp) {
+                    return new Promise(function(resolve, reject){
+                        resp.result(
+                            function(response) {
+                                if (response.statusCode === 200) {
+                                    //Delete mimetype
+                                    logger.info('Mimetype' + settings['name'] + ' was already created. Deleting');
+                                    manager.remove({
+                                        endpoint :  endpoint + '/' + settings['name']
+                                    }).then(function(resp) {
+                                        resolve();
+                                    });
+                                } else if (response.statusCode === 404) {
+                                    resolve();
+                                } else {
+                                    reject('Error while deleting mimetype ' + item);
+                                }
+                            },
+                            function(error) {
+                                reject('Error Cheking for ' + item);
+                                logger.error(error);
+                            }
+                        );
+                    });
+                })
+                .then(function(resp) {
+                    manager.post({
+                            endpoint :  endpoint,
+                            headers : { "Content-Type" : util.getContentType("json") },
+                            body : settings
+                    }).then(function(resp) {
+                            resp.result(
+                                function(response) {
+                                    if (response.statusCode === 204) {
+                                        callBackwhenDone();
+                                    } else {
+                                        logger.error(JSON.stringify(response.data));
+                                        reject('Error when deploying mimetype [Error '+response.statusCode+']');
+                                    }
+                                },
+                                function(error) {
+                                    reject('Error loading file ' + item);
+                                    logger.error(error);
+                                });
+                    });
+                });
+            });
+    });
+};
