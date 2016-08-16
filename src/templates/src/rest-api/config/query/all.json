@@ -86,7 +86,8 @@
             }]
         },
         "sort-order": [{
-            "direction": "descending"
+            "direction": "descending",
+            "score": null
         }]
     }
 }

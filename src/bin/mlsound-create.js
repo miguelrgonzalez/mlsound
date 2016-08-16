@@ -64,8 +64,7 @@ ncp.ncpAsync(path.join(path.resolve(__dirname), '../templates/'),
         //Change project name dependant properties
         changePropertyValue(path.join(name, 'settings/base-configuration/connection.json'), 'global-values.%%APP-NAME%%', name);
 
-        logger.warning('Please enter below the '.white +
-                    'MarkLogic'.red +
+        logger.warning('Please enter below the '.white + 'MarkLogic'.red +
                     ' host name for your local environment'.white);
 
         prompt.message = 'mlsound'.green;

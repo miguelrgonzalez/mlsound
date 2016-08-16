@@ -1,6 +1,6 @@
 {
   "name": "mlsound",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Marklogic JavaScript Software Development tool",
   "bin": {
     "mlsound": "src/bin/mlsound.js"
