@@ -11,7 +11,7 @@ program
     .command('add [module]', 'Add configuration files for [cpf|triggers|mimetypes]')
     .command('bootstrap', 'Bootstrap project')
     .command('wipe', 'Wipe project')
-    .command('deploy [module]', 'Deploy [code|data|schemas|triggers]')
+    .command('deploy [module]', 'Deploy [code|data|schemas|triggers|cpf]')
     .command('clean [module]', 'Clean [code|data|schemas]')
     .command('restart', 'Restart server group')
     .parse(process.argv);

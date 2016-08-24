@@ -215,86 +215,38 @@ DBManager.loadDocuments = function(root, folder, database) {
 
 DBManager.deployTriggers = function(database) {
     var that = this;
-    var manager = this.getHttpManager();
-    var defs = this.getConfiguration("triggers", false);
-
     logger.info("Deploying triggers");
     return new Promise(function(resolve, reject){
-            var callBackwhenDone = (function() {
-                var total = defs.length;
-                return function() {
-                    total = total-1;
-                    if (total < 1 ){
-                        resolve('Triggers Initialized');
-                    }
-                };
-            })();
-
-            if (defs.length === 0) {
-                resolve('Nothing to do');
-            }
             that.getDatabaseProperties(database)
             .then(function(properties) {
-                //Initilialize all
-                defs.forEach(function(item){
-                    var settings = common.objectSettings('triggers/' + item, that.env);
-                    var endpoint = '/manage/LATEST/databases/' + properties["triggers-database"] + '/triggers';
+                return that.initializeMultiObjects('triggers', 'triggers', 'name', undefined, properties["triggers-database"])
+            })
+            .then(function(msg){
+                resolve(msg);
+            }).catch(function(msg){
+                reject(msg);
+            });
+    });
 
-                    manager.get({
-                            endpoint :  endpoint + '/' + settings['name'] + '/properties'
-                    }).then(function(resp) {
-                        return new Promise(function(resolve, reject){
-                            resp.result(
-                                function(response) {
-                                    if (response.statusCode === 200) {
-                                        //Delete trigger
-                                        logger.info('Trigger ' + item + ' was already created. Deleting');
-                                        manager.remove({
-                                            endpoint :  endpoint + '/' + settings['name']
-                                        }).then(function(resp) {
-                                            resolve();
-                                        });
-                                    } else if (response.statusCode === 404) {
-                                        //There was no trigger with this name
-                                        resolve();
-                                    } else {
-                                        reject('Error while deleting trigger ' + item);
-                                    }
-                                },
-                                function(error) {
-                                    reject('Error Cheking for ' + item);
-                                    logger.error(error);
-                                }
-                            );
-                        });
-                    })
-                    //Needs to wait a bit until delete is really processed
-                    //Not sure why, as promises are making sure commands are executed in the
-                    //right order
-                    .delay(1000)
-                    .then(function(resp) {
-                        logger.info("Creating trigger " + item);
-                        manager.post({
-                                endpoint :  endpoint,
-                                headers : { "Content-Type" : util.getContentType("json") },
-                                body : settings
-                        }).then(function(resp) {
-                                resp.result(
-                                    function(response) {
-                                        if (response.statusCode === 201 || response.statusCode === 200) {
-                                            callBackwhenDone();
-                                        } else {
-                                            logger.error(JSON.stringify(response.data));
-                                            reject('Error when deploying trigger at '+database+' [Error '+response.statusCode+']');
-                                        }
-                                    },
-                                    function(error) {
-                                        reject('Error loading file ' + item);
-                                        logger.error(error);
-                                    });
-                        });
-                    });
-                });
+};
+
+DBManager.deployCPF = function(database) {
+    var that = this;
+    logger.info("Deploying CPF");
+    return new Promise(function(resolve, reject){
+            that.initializeMultiObjects('cpf/pipelines', 'pipelines', 'pipeline-name', undefined, database)
+            .then(function(msg){
+                 return
+                 that.initializeMultiObjects('cpf/domains', 'domains', 'domain-name', undefined, database)
+            })
+            .then(function(msg){
+                return
+                that.initializeMultiObjects('cpf/cpf-configs', 'cpf-configs', 'domain-name', undefined, database)
+            })
+            .then(function(msg){
+                resolve("CPF deployed");
+            }).catch(function(msg){
+                reject(msg);
             });
     });
 };

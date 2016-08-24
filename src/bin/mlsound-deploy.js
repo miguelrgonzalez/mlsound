@@ -16,17 +16,17 @@ program
 
 var name = program.args;
 
-if (!/(code|data|schemas)/i.test(name)) {
-    logger.error('Only code, data or schemas are supported');
+if (!/(code|data|schemas|cpf|triggers)/i.test(name)) {
+    logger.error('Only code, data, triggers, cpf or schemas are supported');
     process.exit(1);
 }
 
 var dbManager = database.createDBManager(program.env);
+var settings = common.objectSettings('servers/http', program.env);
 
 var actions = {
     'code' : function() {
         logger.info('Deploying application code into ' + program.env);
-        var settings = common.objectSettings('servers/http', program.env);
         fs.readdirAsync('./src')
         .map(function(file) {
             return path.join('./src', file);
@@ -45,23 +45,19 @@ var actions = {
         })
         .then(function(msg) {
             logger.info("Code deployed".green);
-            return dbManager.deployRestExtensions('src/rest-api/extensions', database);
+            return dbManager.deployRestExtensions('src/rest-api/extensions');
         })
         .then(function(msg) {
             logger.info(msg.green);
-            return dbManager.deployTransformations('src/rest-api/transformations', database);
+            return dbManager.deployTransformations('src/rest-api/transformations');
         })
         .then(function(msg) {
             logger.info(msg.green);
-            return dbManager.deployOptions('src/rest-api/config/query', database);
+            return dbManager.deployOptions('src/rest-api/config/query');
         })
         .then(function(msg) {
             logger.info(msg.green);
-            return dbManager.deployProperties('src/rest-api/config/properties', database);
-        })
-        .then(function(msg) {
-            logger.info(msg.green);
-            return dbManager.deployTriggers(settings['content-database']);
+            return dbManager.deployProperties('src/rest-api/config/properties');
         })
         .then(function(msg) {
             logger.info(msg.green);
@@ -72,8 +68,27 @@ var actions = {
         });
     },
 
+    'triggers' : function() {
+        dbManager.deployTriggers(settings['content-database'])
+        .then(function(msg) {
+            logger.info(msg.green);
+        }).catch(function(err){
+            logger.error(err);
+            process.exit(1);
+        });
+    },
+
+    'cpf' : function() {
+        dbManager.deployCPF(settings['content-database'])
+        .then(function(msg) {
+            logger.info(msg.green);
+        }).catch(function(err){
+            logger.error(err);
+            process.exit(1);
+        });
+    },
+
     'data' : function() {
-        var settings = common.objectSettings('servers/http', program.env);
         dbManager.loadDocuments('data', 'data', settings['content-database'])
         .then(function(msg) {
             logger.info('Data ' +msg);

@@ -96,7 +96,7 @@ DBManager.prototype.getConfiguration = function(type, failOnError) {
     return this.configuration[type];
 };
 
-DBManager.prototype.initializeMultiObjects = function(type, url, typeName, supported) {
+DBManager.prototype.initializeMultiObjects = function(type, url, typeName, supported, database) {
 
     var defs = this.getConfiguration(type);
 
@@ -107,14 +107,22 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
             return function() {
                 total = total-1;
                 if (total < 1 ){
-                    resolve(type + ' Initialized');
+                    resolve(url + ' Initialized');
                 }
             };
         })();
+
+        if (defs.length === 0) {
+            resolve('Nothing to do');
+        }
         //Initilialize all
         defs.forEach(function(item){
             var settings = common.objectSettings(type + '/' + item, that.env);
-            var BASE_SERVER_URL = '/manage/LATEST/' + url;
+            var BASE_SERVER_URL = '/manage/LATEST/';
+            if(database !== undefined) {
+                BASE_SERVER_URL += 'databases/' + database + '/';
+            }
+            BASE_SERVER_URL += url;
             var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings[typeName];
             var manager = that.getHttpManager();
             //Check if exists
@@ -148,7 +156,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                            //There is something to send
                            manager.put({
                                endpoint : UPDATE_SERVER_URL + '/properties',
-                               body : settings
+                               body : payload
                            }).then(function(resp) {
                                resp.result(function(response) {
                                     if (response.statusCode === 204) {

@@ -1,7 +1,7 @@
 {
     "domain-name": "sample-domain",
-    "restart-user-name": "cpf-example-user",
-    "eval-module": "%%MODULES_DATABASE%%",
+    "restart-user-name": "%%APP-NAME%%-application-user",
+    "eval-module": "%%APP-NAME%%-modules",
     "eval-root": "/",
     "conversion-enabled": false,
     "permission": [
