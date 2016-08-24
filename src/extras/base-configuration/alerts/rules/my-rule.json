@@ -1,0 +1,15 @@
+{
+  //This parameter is only needed by mlsound to link the action back to the alert
+  //and it won't be sent to MarkLogic
+  "alert-uri": "my-alert-config",
+  "name": "my-rule",
+  "description": "log to ErrorLog.txt",
+  "user-name": "%%APP-NAME%%-application-user",
+  "query": {
+    "word-query": {
+      "text": "mlsound"
+    }
+  },
+  "action-name": "xdmp:log2",
+  "option": []
+}

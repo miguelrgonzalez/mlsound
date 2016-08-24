@@ -45,13 +45,13 @@ DBManager.prototype.getHttpManager = function (client) {
 
 DBManager.prototype.filterUnsupportedProperties = function(supported, object) {
     var allowed = keys(object).filter(function(el) {
-        return supported.indexOf(el) > 0;
+        return supported.indexOf(el) >= 0;
     });
 
     var newObj = {};
 
-    for(var key in allowed){
-        newObj[key] = object[key];
+    for(var i in allowed){
+        newObj[allowed[i]] = object[allowed[i]];
     }
 
     return newObj;
@@ -96,7 +96,26 @@ DBManager.prototype.getConfiguration = function(type, failOnError) {
     return this.configuration[type];
 };
 
-DBManager.prototype.initializeMultiObjects = function(type, url, typeName, supported, database) {
+/*
+ * This method will try to configure any kind of REST endpoint which has the configuration
+ * in the form of /<api-endpoint>/<multiple-configuration-files>
+ *
+ * Parameters:
+ *  - type: Where to get the configuration files for this endpoint type. example ('alerts/config')
+ *  - url:  Rest URL after /manage/LATEST. Example: 'alerts/config'
+ *  - typeName: which property from the configuration file to use as the Key.
+ *      Example: /alert/actions/{id|name}/properties
+ *  - supported: sometimes there are properties in the JSON payload which are only suported at 
+ *    creation time, but not on update.
+ *  - database: the database name to be included in the URL. If undefinned it will ommit this part
+ *      Example: /manage/v2/databases/{id|name}/alert/actions/{id|name}/properties
+ *  - appendUrl: what to append at the end of the URL. Some REST endpoints do need something extra.
+ *      Example: /properties?uri=my-alert-config
+ *
+ *
+ */
+DBManager.prototype.initializeMultiObjects = function(type, url, typeName,
+                                                      supported, database, appendUrl) {
 
     var defs = this.getConfiguration(type);
 
@@ -123,11 +142,27 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                 BASE_SERVER_URL += 'databases/' + database + '/';
             }
             BASE_SERVER_URL += url;
-            var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings[typeName];
+            if (appendUrl !== undefined && !(/\?.*=/.test(appendUrl))) {
+                BASE_SERVER_URL += appendUrl;
+            }
+
+            var UPDATE_SERVER_URL = BASE_SERVER_URL;
             var manager = that.getHttpManager();
+            var endpoint = ''
+            //if the appendUrl contains a HTTP parameter there is no need for a /
+            if(/\?.*=/.test(appendUrl)) {
+                if(/.*=$/.test(appendUrl)) {
+                   endpoint = UPDATE_SERVER_URL +  appendUrl + settings[typeName];
+                } else {
+                   //the caller is already setting up the parameter
+                   endpoint = UPDATE_SERVER_URL + appendUrl;
+                }
+            } else {
+               endpoint = UPDATE_SERVER_URL + '/' + settings[typeName];
+            }
             //Check if exists
             manager.get({
-                endpoint: UPDATE_SERVER_URL
+                endpoint: endpoint
             }).then(function (resp) {
                 resp.result(function(response) {
                     if (response.statusCode === 404) {
@@ -141,9 +176,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                                     callBackwhenDone();
                                 } else {
                                     reject('Error when creating '+item+' [Error '+ response.statusCode +']');
-                                    //logger.error('Error when creating %s [Error %s]', item, response.statusCode);
                                     console.error(response.data);
-                                    //process.exit(1);
                                 }
                            });
                        });
@@ -154,8 +187,19 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                        var payload = supported ? that.filterUnsupportedProperties(supported, settings) : settings;
                        if(keys(payload).length > 0){
                            //There is something to send
+                           var endpoint = ''
+                           if(/\?.*=/.test(appendUrl)) {
+                               if(/.*=$/.test(appendUrl)) {
+                                   endpoint = UPDATE_SERVER_URL + '/properties' +  appendUrl + settings[typeName];
+                               } else {
+                                   //the caller is already setting up the parameter
+                                   endpoint = UPDATE_SERVER_URL + '/properties' +  appendUrl;
+                               }
+                           } else {
+                               endpoint = UPDATE_SERVER_URL + '/' + settings[typeName] + '/properties';
+                           }
                            manager.put({
-                               endpoint : UPDATE_SERVER_URL + '/properties',
+                               endpoint: endpoint,
                                body : payload
                            }).then(function(resp) {
                                resp.result(function(response) {
@@ -164,8 +208,6 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                                     } else {
                                         console.error(response.data);
                                         reject('Error when updating '+item+' [Error '+ response.statusCode +']');
-                                        //logger.error('Error when updating %s [Error %s]', item, response.statusCode);
-                                        //process.exit(1);
                                     }
                                });
                            });
@@ -176,8 +218,6 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName, suppo
                     } else {
                         console.error(response.data);
                         reject('Error when checking '+item+' [Error '+ response.statusCode +']');
-                        //logger.error('Error when checking %s [Error %s]', item, response.statusCode);
-                        //process.exit(1);
                     }
                 });
             });

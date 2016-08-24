@@ -16,8 +16,8 @@ program
 
 var name = program.args;
 
-if (!/(code|data|schemas|cpf|triggers)/i.test(name)) {
-    logger.error('Only code, data, triggers, cpf or schemas are supported');
+if (!/(code|data|schemas|cpf|triggers|alerts)/i.test(name)) {
+    logger.error('Only code, data, triggers, alerts, cpf or schemas are supported');
     process.exit(1);
 }
 
@@ -80,6 +80,16 @@ var actions = {
 
     'cpf' : function() {
         dbManager.deployCPF(settings['content-database'])
+        .then(function(msg) {
+            logger.info(msg.green);
+        }).catch(function(err){
+            logger.error(err);
+            process.exit(1);
+        });
+    },
+
+    'alerts' : function() {
+        dbManager.deployAlerts(settings['content-database'])
         .then(function(msg) {
             logger.info(msg.green);
         }).catch(function(err){

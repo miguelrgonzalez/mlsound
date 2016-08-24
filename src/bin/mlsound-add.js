@@ -15,8 +15,8 @@ program
 
 var name = program.args;
 
-if (!/(triggers|cpf|mimetypes)/i.test(name)) {
-    logger.error('Only cpf, triggers and mimetypes are supported');
+if (!/(triggers|cpf|mimetypes|alerts)/i.test(name)) {
+    logger.error('Only cpf, triggers, alerts and mimetypes are supported');
     process.exit(1);
 }
 

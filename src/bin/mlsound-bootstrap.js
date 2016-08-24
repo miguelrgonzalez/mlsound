@@ -63,6 +63,7 @@ prompt.get(
         return dbManager.initializeRestAPI();
     }).then(function(msg) {
         logger.info(msg.green);
+        logger.info("Deploying mimetypes");
         return dbManager.deployMimetypes();
     }).then(function(msg) {
         logger.info(msg.green);

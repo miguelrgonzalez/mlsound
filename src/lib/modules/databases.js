@@ -234,14 +234,13 @@ DBManager.deployCPF = function(database) {
     var that = this;
     logger.info("Deploying CPF");
     return new Promise(function(resolve, reject){
-            that.initializeMultiObjects('cpf/pipelines', 'pipelines', 'pipeline-name', undefined, database)
-            .then(function(msg){
-                 return
-                 that.initializeMultiObjects('cpf/domains', 'domains', 'domain-name', undefined, database)
-            })
-            .then(function(msg){
-                return
-                that.initializeMultiObjects('cpf/cpf-configs', 'cpf-configs', 'domain-name', undefined, database)
+            that.getDatabaseProperties(database)
+            .then(function(properties) {
+               var database = properties["triggers-database"]
+               return that.initializeMultiObjects('cpf/pipelines', 'pipelines', 'pipeline-name', undefined, database)
+                        .then(function(msg){
+                            return that.initializeMultiObjects('cpf/domains', 'domains', 'domain-name', undefined, database);
+                        });
             })
             .then(function(msg){
                 resolve("CPF deployed");
@@ -249,4 +248,181 @@ DBManager.deployCPF = function(database) {
                 reject(msg);
             });
     });
+};
+
+DBManager.deployAlerts = function(database) {
+    var that = this;
+    logger.info("Deploying alerts");
+    return new Promise(function(resolve, reject){
+            that.initializeMultiObjects('alerts/configs', 'alert/configs', 'uri', undefined, database, '?uri=')
+            .then(function(msg){
+                 //ALERT Actions
+                 var defs = that.getConfiguration('alerts/actions');
+                 return new Promise(function(resolve, reject){
+                        var callBackwhenDone = (function() {
+                            var total = defs.length;
+                            return function() {
+                                total = total-1;
+                                if (total < 1 ){
+                                    resolve('Alerts configs Initialized');
+                                }
+                            };
+                        })();
+
+                        if (defs.length === 0) {
+                            resolve('Nothing to do');
+                        }
+                        //Initilialize all
+                        defs.forEach(function(item){
+                            var settings = common.objectSettings('alerts/actions/' + item, that.env);
+                            var BASE_SERVER_URL = '/manage/LATEST/databases/' + database + '/alert/actions' ;
+                            var UPDATE_SERVER_URL = BASE_SERVER_URL + '/' + settings["name"];
+                            var supported = ['name', 'description', 'module-db',
+                                             'module-root', 'module', 'options'];
+                            var manager = that.getHttpManager();
+                            //Check if exists
+                            manager.get({
+                                endpoint: BASE_SERVER_URL + '/' + settings["name"] + '?uri=' + settings["alert-uri"]
+                            }).then(function (resp) {
+                                resp.result(function(response) {
+                                    if (response.statusCode === 404) {
+                                        /* does not exist. Create it */
+                                       //only some of the properties are allowed on update. Remove non supported ones
+                                       //Construct payload based on supported properties
+                                       var payload = supported ? that.filterUnsupportedProperties(supported, settings) : settings;
+                                       manager.post({
+                                           endpoint : BASE_SERVER_URL + '?uri=' + settings["alert-uri"],
+                                           body : payload
+                                       }).then(function(resp) {
+                                           resp.result(function(response) {
+                                                if (response.statusCode === 201) {
+                                                    callBackwhenDone();
+                                                } else {
+                                                    reject('Error when creating '+item+' [Error '+ response.statusCode +']');
+                                                    console.error(response.data);
+                                                }
+                                           });
+                                       });
+                                    } else if (response.statusCode === 200) {
+                                       //Already present.
+                                       //only some of the properties are allowed on update. Remove non supported ones
+                                       //Construct payload based on supported properties
+                                       var payload = supported ? that.filterUnsupportedProperties(supported, settings) : settings;
+                                       if(keys(payload).length > 0){
+                                           //There is something to send
+                                           var endpoint = UPDATE_SERVER_URL + '/properties?uri=' + settings['alert-uri'];
+                                           manager.put({
+                                               endpoint: endpoint,
+                                               body : payload
+                                           }).then(function(resp) {
+                                               resp.result(function(response) {
+                                                    if (response.statusCode === 204) {
+                                                        callBackwhenDone();
+                                                    } else {
+                                                        console.error(response.data);
+                                                        reject('Error when updating '+item+' [Error '+ response.statusCode +']');
+                                                    }
+                                               });
+                                           });
+                                       } else {
+                                           //nothing to send. We are done with this
+                                           callBackwhenDone();
+                                       }
+                                    } else {
+                                        console.error(response.data);
+                                        reject('Error when checking '+item+' [Error '+ response.statusCode +']');
+                                    }
+                                });
+                            });
+                        });
+                 })
+                 .then(function(msg){
+                    //ALERTS rules
+                    var defs = that.getConfiguration('alerts/rules');
+                    return new Promise(function(resolve, reject){
+                        var callBackwhenDone = (function() {
+                            var total = defs.length;
+                            return function() {
+                                total = total-1;
+                                if (total < 1 ){
+                                    resolve('Alerts rules Initialized');
+                                }
+                            };
+                        })();
+
+                        if (defs.length === 0) {
+                            resolve('Nothing to do');
+                        }
+                        //Initilialize all
+                        defs.forEach(function(item){
+                            var settings = common.objectSettings('alerts/rules/' + item, that.env);
+                            var BASE_SERVER_URL = '/manage/LATEST/databases/' + database + '/alert/actions/' + settings["action-name"] + '/rules';
+                            var UPDATE_SERVER_URL = BASE_SERVER_URL;
+                            var supported = ['name', 'description', 'user-id',
+                                             'query', 'action-name', 'external-security-id',
+                                             'user-name', 'options'];
+                            var manager = that.getHttpManager();
+                            //Check if exists
+                            manager.get({
+                                endpoint: BASE_SERVER_URL + '/' + settings["name"] + '?uri=' + settings["alert-uri"]
+                            }).then(function (resp) {
+                                resp.result(function(response) {
+                                    if (response.statusCode === 404) {
+                                        /* does not exist. Create it */
+                                       manager.post({
+                                           endpoint : BASE_SERVER_URL + '?uri=' + settings["alert-uri"],
+                                           body : settings
+                                       }).then(function(resp) {
+                                           resp.result(function(response) {
+                                                if (response.statusCode === 201) {
+                                                    callBackwhenDone();
+                                                } else {
+                                                    reject('Error when creating '+item+' [Error '+ response.statusCode +']');
+                                                    console.error(response.data);
+                                                }
+                                           });
+                                       });
+                                    } else if (response.statusCode === 200) {
+                                       //Already present.
+                                       //only some of the properties are allowed on update. Remove non supported ones
+                                       //Construct payload based on supported properties
+                                       var payload = supported ? that.filterUnsupportedProperties(supported, settings) : settings;
+                                       if(keys(payload).length > 0){
+                                           //There is something to send
+                                           var endpoint = UPDATE_SERVER_URL + '/' + settings["name"] + '/properties?uri=' + settings["alert-uri"];
+                                           manager.put({
+                                               endpoint: endpoint,
+                                               body : payload
+                                           }).then(function(resp) {
+                                               resp.result(function(response) {
+                                                    if (response.statusCode === 204) {
+                                                        callBackwhenDone();
+                                                    } else {
+                                                        console.error(response.data);
+                                                        reject('Error when updating '+item+' [Error '+ response.statusCode +']');
+                                                    }
+                                               });
+                                           });
+                                       } else {
+                                           //nothing to send. We are done with this
+                                           callBackwhenDone();
+                                       }
+                                    } else {
+                                        console.error(response.data);
+                                        reject('Error when checking '+item+' [Error '+ response.statusCode +']');
+                                    }
+                                });
+                            });
+                        });
+                 });
+            })
+            .then(function(msg){
+                resolve("Alerts deployed");
+            }).catch(function(msg){
+                reject(msg);
+            });
+    });
+
+    });
+
 };

@@ -3,7 +3,7 @@
    "description": "Sample CPF domain",
    "scope": "collection",
    "uri": "cpf-test",
-    "eval-module": "%%APP-NAME%%-modules",
+   "eval-module": "%%APP-NAME%%-modules",
    "eval-root": "/",
    "pipeline": ["Status Change Handling", "Sample Pipeline"]
  }
