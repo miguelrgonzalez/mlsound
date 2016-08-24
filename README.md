@@ -26,7 +26,7 @@ mlsound version 0.0.1
     add [module]     Add configuration files for [cpf|triggers|mimetypes]
     bootstrap        Bootstrap project
     wipe             Wipe project
-    deploy [module]  Deploy [code|data|schemas]
+    deploy [module]  Deploy [code|data|schemas|triggers|cpf]
     clean [module]   Clean [code|data|schemas]
     restart          Restart server group
     help [cmd]       display help for [cmd]
