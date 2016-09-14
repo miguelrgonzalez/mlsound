@@ -5,8 +5,9 @@
   "bin": {
     "mlsound": "src/bin/mlsound.js"
   },
+  "main": "src/index.js",
   "scripts": {
-      "test": "mocha src/tests"
+    "test": "mocha src/tests"
   },
   "author": "Miguel Rodriguez <miguel.rodriguez@marklogic.com>",
   "license": "Apache-2.0",
@@ -16,13 +17,15 @@
     "commander": "^2.8.1",
     "conflate": "^1.1.0",
     "core-util-is": "^1.0.1",
+    "form-urlencoded": "^1.4.1",
+    "graceful-readlink": "^1.0.1",
     "marklogic": "^1.0.3",
     "mkdirp": "^0.5.1",
+    "mocha": "^2.5.0",
     "ncp": "^2.0.0",
     "node-json-minify": "^0.1.4-a",
     "prompt": "^0.2.14",
     "recursive-readdir": "^1.2.1",
-    "mocha": "^2.5.0",
     "should": "^10.0.0"
   }
 }

@@ -87,7 +87,7 @@ DBManager.buildDatabase = function(settings, type) {
                         }).then(function(resp) {
                             resp.result(function(response) {
                                 if (response.statusCode !== 204) {
-                                    logger.error(response.data);
+                                    logger.error(response.data.errorResponse.message);
                                     reject('Error when updating '+type+' database [Error '+response.statusCode+']');
                                 } else {
                                     resolve(type + " database updated");
@@ -162,6 +162,22 @@ DBManager.removeDatabase = function(type, removeForest) {
                     logger.error(response.data);
                 }
             });
+        });
+    });
+};
+
+
+DBManager.initializeRebalancer = function(type) {
+    var that = this;
+    var settings = common.objectSettings('databases/' + type, this.env);
+    return new Promise(function(resolve, reject){
+        that.initializeMultiObjects('database-rebalancer/partitions', 'partitions', 'partition-name', [], settings['database-name'])
+        .then(function(msg){
+            return that.initializeMultiObjects('database-rebalancer/rebalancer', 'rebalancer', undefined, [], settings['database-name'])
+
+        })
+        .then(function(msg){
+            resolve(msg);
         });
     });
 };

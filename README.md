@@ -36,3 +36,6 @@ mlsound version 0.0.1
     -h, --help     output usage information
     -V, --version  output the version number
 ```
+
+To create a custom command have a look at the included ./bin/mlsound-custom.js.
+You can create more commands adding them to the ./bin folder following the naming convention "./bin/mlsound-<command>.js"

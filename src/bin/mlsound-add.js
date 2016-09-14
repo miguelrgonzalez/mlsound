@@ -15,8 +15,8 @@ program
 
 var name = program.args;
 
-if (!/(triggers|cpf|mimetypes|alerts)/i.test(name)) {
-    logger.error('Only cpf, triggers, alerts and mimetypes are supported');
+if (!/(triggers|cpf|mimetypes|alerts|database-rebalancer)/i.test(name)) {
+    logger.error('Only cpf, triggers, alerts, mimetypes and database-rebalancer are supported');
     process.exit(1);
 }
 
@@ -47,5 +47,3 @@ fs.accessAsync('./settings/base-configuration/connection.json', fs.F_OK)
 .catch(function(err){
         logger.error("You must run this command from inside a project");
 });
-
-

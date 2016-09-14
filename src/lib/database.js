@@ -7,6 +7,7 @@ var marklogic = require('marklogic');
 var mlutil = require('marklogic/lib/mlutil.js');
 var util = require('../lib/utils.js');
 var logger = util.consoleLogger;
+var formurlencoded = require('form-urlencoded');
 
 var DBManager = function(env){
 
@@ -279,6 +280,31 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params) {
                         //process.exit(1);
                     }
                 });
+            });
+        });
+    });
+};
+
+DBManager.prototype.eval = function(database, payload) {
+    var manager = this.getHttpManager();
+    return new Promise(function(resolve, reject){
+        manager.post({
+            endpoint: '/LATEST/eval',
+            params : {
+                database : database
+            },
+            headers : {
+                'Content-type' : 'application/x-www-form-urlencoded',
+            },
+            body: formurlencoded(payload)
+        }).then(function(resp) {
+            resp.result(function(response) {
+                if (response.statusCode === 200 || response.length >0)  {
+                    resolve(response);
+                } else {
+                    logger.error(JSON.stringify(response));
+                    reject('Error when performing eval at '+database+' [Error '+response.statusCode+']');
+                }
             });
         });
     });
