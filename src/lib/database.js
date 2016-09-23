@@ -287,6 +287,7 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params) {
 
 DBManager.prototype.eval = function(database, payload) {
     var manager = this.getHttpManager();
+    console.log("test " + JSON.stringify(payload));
     return new Promise(function(resolve, reject){
         manager.post({
             endpoint: '/LATEST/eval',
@@ -296,7 +297,7 @@ DBManager.prototype.eval = function(database, payload) {
             headers : {
                 'Content-type' : 'application/x-www-form-urlencoded',
             },
-            body: formurlencoded(payload)
+            body: formurlencoded(payload,  { ignorenull : true})
         }).then(function(resp) {
             resp.result(function(response) {
                 if (response.statusCode === 200 || response.length >0)  {

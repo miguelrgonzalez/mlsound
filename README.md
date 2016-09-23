@@ -5,10 +5,9 @@ This projects aims to provide a fully functional javascript solution for deployi
 
 **Be warned!!** Although is already quite useful, the project is still under development.
 
-For now there is no npm package yet. To install it just execute the following command from project's root:
+To install it just execute the following command :
 ```
-    $> npm install
-    $> npm link
+    $> npm install mlsound
 ```
 
 Once installed:
