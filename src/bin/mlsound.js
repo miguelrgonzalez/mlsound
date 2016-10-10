@@ -114,12 +114,17 @@ program
     .command('restart', 'Restart server group');
 
 //Add user custom commands
-fs.readdirSync('./bin').map(function(file) {
-            var re = new RegExp('(^bin/mlsound-|mlsound-|\.js$)', 'g');
-            return file.replace(re, '');
-}).forEach(function(c) {
-    program.command(c, 'custom command');
-});
+try {
+    fs.readdirSync('./bin').map(function(file) {
+                var re = new RegExp('(^bin/mlsound-|mlsound-|\.js$)', 'g');
+                return file.replace(re, '');
+    }).forEach(function(c) {
+        program.command(c, 'custom command');
+    });
+} catch (err) {
+  // Not really an error
+  // The user didn't extend the framework
+}
 
 program
     .parse(process.argv);
