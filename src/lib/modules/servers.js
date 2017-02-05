@@ -19,7 +19,7 @@ DBManager.restartGroup = function() {
                     resolve("Group Restarted");
                 }
                 else {
-                    logger.error(response.data);
+                    logger.error(JSON.stringify(response.data));
                     reject('Error when restarting server group '+that.httpSettings['group-name']+' [Error '+response.statusCode+']');
                     //logger.error('Error when restarting server group %s [Error %s]',
                         //that.httpSettings['group-name'], response.statusCode);
@@ -258,6 +258,30 @@ DBManager.removeForests = function(type, level) {
        });
     });
 
+};
+
+DBManager.getHostList = function() {
+    var manager = this.getHttpManager();
+
+    return new Promise(function(resolve, reject){
+                manager.get({
+                        endpoint :  '/manage/LATEST/hosts'
+                }).then(function(resp) {
+                    resp.result(
+                            function(response) {
+                                if (response.statusCode === 200) {
+                                    resolve(response.data);
+                                } else {
+                                    reject('Error when retrieving host list');
+                                }
+                            },
+                            function(error) {
+                                reject('Error Cheking for ' + item);
+                                logger.error(error);
+                            }
+                    );
+                });
+    });
 };
 
 DBManager.deployMimetypes = function(database) {

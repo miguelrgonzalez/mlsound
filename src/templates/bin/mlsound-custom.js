@@ -4,6 +4,7 @@ var database = require('mlsound').database;
 var util = require('mlsound').util;
 var prompt = require('mlsound').prompt;
 var program = require('mlsound').program;
+var logger = util.consoleLogger;
 
 program
     .option('-e, --env [environment]', 'Environment', 'local')
@@ -11,11 +12,13 @@ program
 
 var name = program.args;
 
-tar settings = common.objectSettings('servers/http', program.env);
+var settings = common.objectSettings('servers/http', program.env);
+
+var dbManager = database.createDBManager(program.env);
 
 logger.info("Place here your custom command extension")
-database.eval(settings["content-database"],
-        { javascript : 'fn.currentDate();' }
+dbManager.eval(settings["content-database"],
+    'javascript= fn.currentDateTime()'
 ).then(function(resp) {
     logger.info("The date at the server is " + resp[0].data.content);
 });

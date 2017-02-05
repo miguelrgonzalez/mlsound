@@ -4,6 +4,7 @@
    "scope": "collection",
    "uri": "cpf-test",
    "eval-module": "%%APP-NAME%%-modules",
+   "conversion-enabled" : true,
    "eval-root": "/",
    "pipeline": ["Status Change Handling", "Sample Pipeline"]
  }

@@ -46,9 +46,9 @@ prompt.get(
         logger.info(msg.green);
         //databases
         return dbManager.initializeDatabase('content');
-    }).then(function(msg) {
+    /*}).then(function(msg) {
         logger.info(msg.green);
-        return dbManager.initializeRebalancer('content');
+        return dbManager.initializeRebalancer('content'); */
     }).then(function(msg) {
         logger.info(msg.green);
         return dbManager.initializeDatabase('modules');

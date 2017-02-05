@@ -135,7 +135,7 @@ Manager.prototype.get = Promise.coroutine(function* (paramsObj) {
       'GET '+path, this.client, requestOptions, 'empty',
       ((hasResponse === 'false') ? 'empty' : 'single')
       );
-  operation.validStatusCodes = [200, 201, 204, 404, 400];
+  operation.validStatusCodes = [200, 201, 204, 404, 400, 500];
   operation.outputTransform  = responseOutputTransform;
 
   return requester.startRequest(operation);
@@ -171,7 +171,7 @@ Manager.prototype.post = Promise.coroutine(function* (paramsObj) {
       ((hasResponse === 'false') ? 'empty' : 'single')
       );
 
-  operation.validStatusCodes = [200, 201, 202, 204, 400];
+  operation.validStatusCodes = [200, 201, 202, 204, 400, 500];
   operation.outputTransform  = responseOutputTransform;
   if (hasBody) {
     operation.requestBody = body;
@@ -209,7 +209,7 @@ Manager.prototype.put = Promise.coroutine(function* (paramsObj) {
       ((hasResponse === 'true') ? 'single' : 'empty')
       );
 
-  operation.validStatusCodes = [201, 204, 400];
+  operation.validStatusCodes = [201, 204, 400, 500];
   operation.outputTransform  = responseOutputTransform;
   if (hasBody) {
     operation.requestBody = body;

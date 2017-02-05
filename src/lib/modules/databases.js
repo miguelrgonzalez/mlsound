@@ -22,7 +22,7 @@ DBManager.databaseOperation = function(operation, database) {
                 if (response.statusCode === 200) {
                     resolve(database);
                 } else {
-                    logger.error(response.data);
+                    logger.error(response.data.errorResponse.message);
                     reject('Error when issuing database operation '+operation+' at '+database+' [Error '+response.statusCode+']');
                 }
             });
@@ -43,7 +43,7 @@ DBManager.getDatabaseProperties = function(database) {
                 } else if (response.statusCode === 404) {
                     resolve();
                 } else {
-                    logger.error(response.data);
+                    logger.error(response.data.errorResponse.message);
                     reject('Error when fetching database properties at '+database+' [Error '+response.statusCode+']');
                 }
             });
@@ -95,7 +95,7 @@ DBManager.buildDatabase = function(settings, type) {
                             });
                         });
                 } else {
-                    logger.error(response.data);
+                    logger.error(response.data.errorResponse.message);
                     reject('Error when checking '+type+' database [Error '+response.statusCode+']');
                 }
 
@@ -149,7 +149,7 @@ DBManager.removeDatabase = function(type, removeForest) {
                             resp.result(function(response) {
                                 if (response.statusCode !== 204) {
                                     reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
-                                    logger.error(response.data);
+                                    logger.error(response.data.errorResponse.message);
                                 }
                                 resolve(type + ' database removed');
                             });
@@ -158,8 +158,8 @@ DBManager.removeDatabase = function(type, removeForest) {
                     //database already removed
                     resolve('Database already removed');
                 } else {
+                    logger.error(response.data.errorResponse.message);
                     reject('Error when deleting '+type+' database [Error '+response.statusCode+']');
-                    logger.error(response.data);
                 }
             });
         });
@@ -171,10 +171,12 @@ DBManager.initializeRebalancer = function(type) {
     var that = this;
     var settings = common.objectSettings('databases/' + type, this.env);
     return new Promise(function(resolve, reject){
-        that.initializeMultiObjects('database-rebalancer/partitions', 'partitions', 'partition-name', [], settings['database-name'])
+        that.initializeMultiObjects('database-rebalancer/partitions', 'partitions', 'partition-name', [], settings['schema-database'])
         .then(function(msg){
-            return that.initializeMultiObjects('database-rebalancer/rebalancer', 'rebalancer', undefined, [], settings['database-name'])
-
+            return that.initializeMultiObjects('database-rebalancer/rebalancer', 'rebalancer', undefined, [], settings['schema-database'])
+        })
+        .then(function(msg){
+            return that.initializeMultiObjects('database-rebalancer/partition-queries', 'partition-queries', 'partition-number', [], settings['schema-database'])
         })
         .then(function(msg){
             resolve(msg);
@@ -253,15 +255,22 @@ DBManager.deployCPF = function(database) {
             that.getDatabaseProperties(database)
             .then(function(properties) {
                var database = properties["triggers-database"]
-               return that.initializeMultiObjects('cpf/pipelines', 'pipelines', 'pipeline-name', undefined, database)
-                        .then(function(msg){
-                            return that.initializeMultiObjects('cpf/domains', 'domains', 'domain-name', undefined, database);
-                        });
-            })
-            .then(function(msg){
-                resolve("CPF deployed");
-            }).catch(function(msg){
-                reject(msg);
+               var manager = that.getHttpManager();
+               manager.post({
+                    endpoint: '/manage/LATEST/databases/' + database + '/pipelines?format=json',
+                    body: { 'operation' : 'load-default-cpf-pipelines' }
+               }).then(function() {
+                    return that.initializeMultiObjects('cpf/pipelines', 'pipelines', 'pipeline-name', undefined, database)
+               }).then(function(msg){
+                    return that.initializeMultiObjects('cpf/domains', 'domains', 'domain-name', undefined, database);
+               /*}).then(function(msg){
+                    return that.initializeMultiObjects('cpf/cpf-configs', 'cpf-configs', 'domain-name', undefined, database);
+                   */
+               }).then(function(msg){
+                    resolve("CPF deployed");
+               });
+             }).catch(function(msg){
+                 reject(msg);
             });
     });
 };
@@ -314,8 +323,8 @@ DBManager.deployAlerts = function(database) {
                                                 if (response.statusCode === 201) {
                                                     callBackwhenDone();
                                                 } else {
+                                                    logger.error(response.data.errorResponse.message);
                                                     reject('Error when creating '+item+' [Error '+ response.statusCode +']');
-                                                    console.error(response.data);
                                                 }
                                            });
                                        });
@@ -335,7 +344,7 @@ DBManager.deployAlerts = function(database) {
                                                     if (response.statusCode === 204) {
                                                         callBackwhenDone();
                                                     } else {
-                                                        console.error(response.data);
+                                                        logger.error(response.data.errorResponse.message);
                                                         reject('Error when updating '+item+' [Error '+ response.statusCode +']');
                                                     }
                                                });
@@ -345,7 +354,7 @@ DBManager.deployAlerts = function(database) {
                                            callBackwhenDone();
                                        }
                                     } else {
-                                        console.error(response.data);
+                                        logger.error(response.data.errorResponse.message);
                                         reject('Error when checking '+item+' [Error '+ response.statusCode +']');
                                     }
                                 });
@@ -393,8 +402,8 @@ DBManager.deployAlerts = function(database) {
                                                 if (response.statusCode === 201) {
                                                     callBackwhenDone();
                                                 } else {
+                                                    logger.error(response.data.errorResponse.message);
                                                     reject('Error when creating '+item+' [Error '+ response.statusCode +']');
-                                                    console.error(response.data);
                                                 }
                                            });
                                        });
@@ -414,7 +423,7 @@ DBManager.deployAlerts = function(database) {
                                                     if (response.statusCode === 204) {
                                                         callBackwhenDone();
                                                     } else {
-                                                        console.error(response.data);
+                                                        logger.error(response.data.errorResponse.message);
                                                         reject('Error when updating '+item+' [Error '+ response.statusCode +']');
                                                     }
                                                });
@@ -424,7 +433,7 @@ DBManager.deployAlerts = function(database) {
                                            callBackwhenDone();
                                        }
                                     } else {
-                                        console.error(response.data);
+                                        logger.error(response.data.errorResponse.message);
                                         reject('Error when checking '+item+' [Error '+ response.statusCode +']');
                                     }
                                 });

@@ -70,7 +70,7 @@ DBManager.prototype.getConfigurationFiles = function(folder, failOnError) {
             return fs.readdirSync(folder).map(removeExt('.json'));
         } catch(e) {
             if (failOnError) {
-                console.error(folder + ' Not found!!!! ');
+                logger.error(folder + ' Not found!!!! ');
                 process.exit(1);
             } else {
                 //return empty list
@@ -177,7 +177,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName,
                                     callBackwhenDone();
                                 } else {
                                     reject('Error when creating '+item+' [Error '+ response.statusCode +']');
-                                    console.error(response.data);
+                                    logger.error(JSON.stringify(response.data));
                                 }
                            });
                        });
@@ -207,8 +207,8 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName,
                                     if (response.statusCode === 204) {
                                         callBackwhenDone();
                                     } else {
-                                        console.error(response.data);
                                         reject('Error when updating '+item+' [Error '+ response.statusCode +']');
+                                        logger.error(JSON.stringify(response.data));
                                     }
                                });
                            });
@@ -217,7 +217,7 @@ DBManager.prototype.initializeMultiObjects = function(type, url, typeName,
                            callBackwhenDone();
                        }
                     } else {
-                        console.error(response.data);
+                        logger.error(response.data);
                         reject('Error when checking '+item+' [Error '+ response.statusCode +']');
                     }
                 });
@@ -265,7 +265,7 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params) {
                                 } else {
                                     reject('Error when deleting '+item+' [Error '+response.statusCode+']');
                                     //logger.error('Error when deleting %s [Error %s]', item, response.statusCode);
-                                    console.error(response.data);
+                                    logger.error(response.data);
                                     //process.exit(1);
                                 }
                            });
@@ -276,7 +276,7 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params) {
                     } else {
                         reject('Error when checking '+item+' [Error '+response.statusCode+']');
                         //logger.error('Error when checking %s [Error %s]', item, response.statusCode);
-                        console.error(response.data);
+                        logger.error(response.data);
                         //process.exit(1);
                     }
                 });
@@ -286,18 +286,17 @@ DBManager.prototype.removeMultiObjects = function(type, url, typeName, params) {
 };
 
 DBManager.prototype.eval = function(database, payload) {
-    var manager = this.getHttpManager();
-    console.log("test " + JSON.stringify(payload));
+    var manager = this.getRestAPIManager();
     return new Promise(function(resolve, reject){
         manager.post({
-            endpoint: '/LATEST/eval',
+            endpoint: '/v1/eval',
             params : {
                 database : database
             },
             headers : {
-                'Content-type' : 'application/x-www-form-urlencoded',
+                'Content-type' : 'application/x-www-form-urlencoded'
             },
-            body: formurlencoded(payload,  { ignorenull : true})
+            body: payload
         }).then(function(resp) {
             resp.result(function(response) {
                 if (response.statusCode === 200 || response.length >0)  {
